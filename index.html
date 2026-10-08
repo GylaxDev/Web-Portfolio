@@ -6,12 +6,16 @@
     <title>Portfolio - Vincent</title>
     <meta name="description" content="Portfolio of Vincent Alexander: web development, digital forensics, Android applications, and UI design.">
  
+    <meta name="theme-color" content="#000000">
     <link rel="icon" type="image/png" href="assets/favicon.png">
+    <script>document.documentElement.classList.add('js')</script>
  
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap">
  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=apps,arrow_outward,code,language,palette,security,smartphone,web&display=block">
+
     <link rel="preload" as="image" href="assets/Mockup Screen.png" fetchpriority="high">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="devices.css">
@@ -21,16 +25,6 @@
 <body>
  
     <nav class="local-nav">
-        <div class="progressive-blur" aria-hidden="true">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
         <div class="local-nav-content">
             <div class="local-nav-title">
                 <img src="assets/logo.png" alt="Vincent logo" class="logo-img" width="20" height="20">
@@ -99,23 +93,23 @@
         </div>
     </section>
 
-    <section class="section-highlights reveal" id="highlights">
-        <div class="section-header">
+    <section class="section-highlights" id="highlights">
+        <div class="section-header reveal">
             <h2 class="section-title">Get the highlights.</h2>
             <div class="gallery-nav" role="group" aria-label="Filter highlights by focus area">
-                <button type="button" class="gallery-pill active" data-filter="all" aria-pressed="true">All Focus Areas</button>
-                <button type="button" class="gallery-pill" data-filter="security" aria-pressed="false">Cybersecurity</button>
-                <button type="button" class="gallery-pill" data-filter="mobile" aria-pressed="false">Web &amp; Software Development</button>
-                <button type="button" class="gallery-pill" data-filter="graphics" aria-pressed="false">UI/UX Design</button>
+                <button type="button" class="gallery-pill active" data-filter="all" aria-pressed="true"><span class="material-symbols-rounded" aria-hidden="true">apps</span>All Focus Areas</button>
+                <button type="button" class="gallery-pill" data-filter="security" aria-pressed="false"><span class="material-symbols-rounded" aria-hidden="true">security</span>Cybersecurity</button>
+                <button type="button" class="gallery-pill" data-filter="mobile" aria-pressed="false"><span class="material-symbols-rounded" aria-hidden="true">code</span>Web &amp; Software Development</button>
+                <button type="button" class="gallery-pill" data-filter="graphics" aria-pressed="false"><span class="material-symbols-rounded" aria-hidden="true">palette</span>UI/UX Design</button>
             </div>
         </div>
  
         <div class="gallery-cards">
             <div class="card" data-category="security">
                 <div>
-                    <div class="card-tag">Digital Forensics &amp; CTF</div>
+                    <div class="card-tag"><span class="material-symbols-rounded" aria-hidden="true">security</span>Digital Forensics &amp; CTF</div>
                     <div class="card-headline">Web exploits, Cryptography &amp; Forensics.</div>
-                    <div class="card-desc">Experience in digital forensics and competitive capture-the-flag (CTF) competitions.</div>
+                    <div class="card-desc">Experience in digital forensics and CTF competitions.</div>
                 </div>
                 <div class="card-graphic">
                     <img src="assets/highlight-ctf.png" alt="CTF showcase" class="card-img" loading="lazy" decoding="async" width="480" height="220">
@@ -123,12 +117,12 @@
             </div>
             <div class="card" data-category="mobile">
                 <div>
-                    <div class="card-tag">Web Development</div>
-                    <div class="card-headline">Modern web applications with React and Node.js.</div>
+                    <div class="card-tag"><span class="material-symbols-rounded" aria-hidden="true">language</span>Web Development</div>
+                    <div class="card-headline">Modern web applications with Python and JavaScript.</div>
                     <div class="card-desc">Creating website using Python and JavaScript. Designing modern user interface using Figma.</div>
                     <div class="card-github-link">
                         <a href="https://github.com/Android-Stuff/UNEJ-MAPS" target="_blank" rel="noopener noreferrer">
-                            View on GitHub &rarr;
+                            View on GitHub <span class="material-symbols-rounded" aria-hidden="true">arrow_outward</span>
                         </a>
                     </div>
                 </div>
@@ -140,7 +134,7 @@
             </div>
             <div class="card" data-category="graphics">
                 <div>
-                    <div class="card-tag">Graphic Design</div>
+                    <div class="card-tag"><span class="material-symbols-rounded" aria-hidden="true">palette</span>Graphic Design</div>
                     <div class="card-headline">Elementary OS Desktop Concept Design.</div>
                     <div class="card-desc">Creating clean desktop environments, Fresh New Designs. Using Figma for prototyping.</div>
                 </div>
@@ -150,9 +144,9 @@
             </div>
             <div class="card" data-category="security">
                 <div>
-                    <div class="card-tag">Software Development</div>
+                    <div class="card-tag"><span class="material-symbols-rounded" aria-hidden="true">code</span>Software Development</div>
                     <div class="card-headline">C#/C++ &amp; Python.</div>
-                    <div class="card-desc">Building software using C#, C++, and Python. Using WinUI3 to build Windows desktop applications.</div>
+                    <div class="card-desc">Building software using C#, C++, and Python. Using WinUI3 and WPF to build various Windows desktop applications.</div>
                 </div>
                 <div class="card-graphic">
                     <img src="assets/Showcase-WinUI3.png" alt="WinUI3 development" class="card-img" loading="lazy" decoding="async" width="480" height="220">
@@ -167,10 +161,10 @@
 
         <div class="viewer-container">
             <div class="controls" role="tablist" aria-label="Project categories">
-                <button type="button" class="tab-btn active" data-project="design" role="tab" aria-selected="true">Graphic Design</button>
-                <button type="button" class="tab-btn" data-project="ctf" role="tab" aria-selected="false">Cybersecurity</button>
-                <button type="button" class="tab-btn" data-project="cpp" role="tab" aria-selected="false">Software Development</button>
-                <button type="button" class="tab-btn" data-project="mobile" role="tab" aria-selected="false">Mobile Development</button>
+                <button type="button" class="tab-btn active" data-project="design" role="tab" aria-selected="true"><span class="material-symbols-rounded" aria-hidden="true">palette</span>Graphic Design</button>
+                <button type="button" class="tab-btn" data-project="ctf" role="tab" aria-selected="false"><span class="material-symbols-rounded" aria-hidden="true">security</span>Cybersecurity</button>
+                <button type="button" class="tab-btn" data-project="cpp" role="tab" aria-selected="false"><span class="material-symbols-rounded" aria-hidden="true">code</span>Software Development</button>
+                <button type="button" class="tab-btn" data-project="mobile" role="tab" aria-selected="false"><span class="material-symbols-rounded" aria-hidden="true">smartphone</span>Mobile Development</button>
             </div>
 
             <div class="viewer-display">
@@ -193,19 +187,23 @@
  
         <div class="specs-grid">
             <div class="spec-item">
-                <div class="spec-value">C++ / Kotlin</div>
-                <div class="spec-label">Developing software using C++ &amp; Android Studio for mobile apps development.</div>
+                <div class="spec-icon"><span class="material-symbols-rounded" aria-hidden="true">code</span></div>
+                <div class="spec-value">Development</div>
+                <div class="spec-label">Developing software using C#, C++, Python &amp; .NET.</div>
             </div>
             <div class="spec-item">
-                <div class="spec-value">HTML &amp; CSS</div>
+                <div class="spec-icon"><span class="material-symbols-rounded" aria-hidden="true">web</span></div>
+                <div class="spec-value">Website</div>
                 <div class="spec-label">Responsive web design &amp; user interface development.</div>
             </div>
             <div class="spec-item">
-                <div class="spec-value">CTF</div>
+                <div class="spec-icon"><span class="material-symbols-rounded" aria-hidden="true">security</span></div>
+                <div class="spec-value">Security</div>
                 <div class="spec-label">Web exploitation, cryptography &amp; forensics. Using Kali Linux for advanced tools.</div>
             </div>
             <div class="spec-item">
-                <div class="spec-value">UI Design</div>
+                <div class="spec-icon"><span class="material-symbols-rounded" aria-hidden="true">palette</span></div>
+                <div class="spec-value">Design</div>
                 <div class="spec-label">UI/UX design using Figma. Icon design and application design</div>
             </div>
         </div>

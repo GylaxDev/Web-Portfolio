@@ -1,6 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
     'use strict';
 
+    /* ---------- Hero headline rises word by word ---------- */
+    const headline = document.querySelector('.hero-headline');
+    if (headline) {
+        let i = 0;
+        const parts = [];
+        headline.childNodes.forEach((node) => {
+            if (node.nodeType !== Node.TEXT_NODE) { parts.push(node); return; }
+            node.textContent.trim().split(/\s+/).filter(Boolean).forEach((word) => {
+                const wrap = document.createElement('span');
+                wrap.className = 'iw';
+                const inner = document.createElement('span');
+                inner.style.setProperty('--i', i++);
+                inner.textContent = word;
+                wrap.appendChild(inner);
+                parts.push(wrap, document.createTextNode(' '));
+            });
+        });
+        headline.replaceChildren(...parts);
+    }
+
     /* ---------- Scroll reveal ---------- */
     const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
@@ -41,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     card.classList.add('is-hidden');
                 }
             });
+            requestAnimationFrame(updateScrollFx);
         });
     }
 
@@ -49,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         design: {
             title: 'Elementary OS Concept UI',
             desc: 'Featuring new modern design elements and improved user interface to mimic modern desktop environments. It features cleaner user interface with new icons and more rounded corners. Based on Elementary OS 8.',
-            tags: ['Figma', 'Adobe Photoshop', 'Canva', 'Krita'],
+            tags: ['Figma', 'Adobe Photoshop', 'Canva', 'Krita', 'Affinity'],
             image: 'assets/Mockup.png'
         },
         ctf: {
@@ -61,12 +82,12 @@ document.addEventListener('DOMContentLoaded', () => {
         cpp: {
             title: 'Software Development in C++/C# & Python',
             desc: 'Developed software applications using C++ and C#, and created scripts in Python. My latest project is a Windows desktop cleaner application built with WinUI3.',
-            tags: ['Visual Studio Code', 'Visual Studio', 'PyCharm'],
+            tags: ['Visual Studio', 'Visual Studio Code', 'PyCharm'],
             image: 'assets/Showcase-WinUI3.png'
         },
         mobile: {
-            title: 'Car Android App Prototype',
-            desc: 'A native Android application designed with declarative Kotlin UI components, custom reactive state handling, and sleek dark mode automotive controls.',
+            title: 'Android App Prototype',
+            desc: 'A native Android application designed with card-based navigation, Material UI, and responsive layouts.',
             tags: ['Android Studio', 'Jetpack Compose', 'Android SDK', 'Material Design 3'],
             image: 'assets/showcase-mobile.png'
         }
@@ -75,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const TAB_TRANSITION_MS = 300;
 
     const controls = document.querySelector('.controls');
+    const viewerEl = document.querySelector('.viewer-container');
     const displayBox = document.getElementById('projectDisplay');
     const imgElement = document.getElementById('projectImage');
     const titleEl = document.getElementById('projectTitle');
@@ -105,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const initialProjectKey = activeTab ? activeTab.dataset.project : 'design';
         if (projectsData[initialProjectKey]) {
             renderProjectData(projectsData[initialProjectKey]);
+            if (viewerEl) viewerEl.dataset.project = initialProjectKey;
         }
 
         controls.addEventListener('click', (e) => {
@@ -122,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.setAttribute('aria-selected', 'true');
 
             isSwitching = true;
+            if (viewerEl) viewerEl.dataset.project = btn.dataset.project;
             displayBox.classList.add('tab-transitioning');
 
             window.setTimeout(() => {
@@ -253,5 +277,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { threshold: 0.2 });
 
         laptopObserver.observe(laptopStage);
+    }
+
+    /* ---------- Scroll effects: stacking highlight cards + tilting project screen ---------- */
+    const stackCards = [...document.querySelectorAll('.gallery-cards .card')];
+    const viewerBox = document.querySelector('.viewer-container');
+    const reduceFx = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const clamp01 = (v) => Math.min(1, Math.max(0, v));
+
+    function updateScrollFx() {
+        if (reduceFx) return;
+        const wide = window.innerWidth > 850;
+        const visible = stackCards.filter((c) => !c.classList.contains('is-hidden'));
+
+        visible.forEach((card, i) => {
+            const next = visible[i + 1];
+            let cover = 0;
+            if (wide && next) {
+                const stickTop = parseFloat(getComputedStyle(next).top) || 0;
+                const travel = card.offsetHeight + 24;
+                cover = clamp01(1 - (next.getBoundingClientRect().top - stickTop) / travel);
+            }
+            card.style.setProperty('--cover', cover.toFixed(3));
+        });
+
+        if (viewerBox) {
+            const top = viewerBox.getBoundingClientRect().top;
+            const vh = window.innerHeight;
+            viewerBox.style.setProperty('--vp', clamp01((vh * 0.95 - top) / (vh * 0.6)).toFixed(3));
+        }
+    }
+
+    if (!reduceFx) {
+        window.addEventListener('scroll', () => requestAnimationFrame(updateScrollFx), { passive: true });
+        window.addEventListener('resize', updateScrollFx);
+        updateScrollFx();
     }
 });
