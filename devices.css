@@ -1,4 +1,5 @@
 :root {
+    --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);
     --mba-silver-hi: #647c9c;
     --mba-silver-light: #3c5180;
     --mba-silver-mid: #252a32;
@@ -22,20 +23,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.laptop-stage::before {
-    content: '';
-    position: absolute;
-    top: 6%;
-    left: 50%;
-    width: 85%;
-    max-width: 800px;
-    aspect-ratio: 1.6 / 1;
-    transform: translateX(-50%);
-    background: radial-gradient(ellipse at center, rgba(200, 210, 255, 0.16) 0%, rgba(120, 140, 255, 0.08) 40%, transparent 72%);
-    pointer-events: none;
-    z-index: 0;
 }
 
 .laptop-body {
