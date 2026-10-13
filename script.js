@@ -22,16 +22,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ---------- Scroll reveal ---------- */
-    const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-                revealObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    if ('IntersectionObserver' in window) {
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 
-    document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
+        document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
+    } else {
+        document.querySelectorAll('.reveal').forEach((el) => el.classList.add('active'));
+    }
 
     /* ---------- Highlights filter ---------- */
     const galleryNav = document.querySelector('.gallery-nav');
@@ -71,25 +75,33 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Elementary OS Concept UI',
             desc: 'Featuring new modern design elements and improved user interface to mimic modern desktop environments. It features cleaner user interface with new icons and more rounded corners. Based on Elementary OS 8.',
             tags: ['Figma', 'Adobe Photoshop', 'Canva', 'Krita', 'Affinity'],
-            image: 'assets/Mockup.png'
+            image: 'assets/Mockup.png',
+            width: 2000,
+            height: 1334
         },
         ctf: {
             title: 'Cybersecurity & Linux',
             desc: 'Experience in cybersecurity and CTF. Also experienced with many Linux distros.',
             tags: ['FFUF', 'Burp Suite', 'John the Ripper', 'FTK Imager', 'CyberChef', 'Wireshark', 'Kali Linux'],
-            image: 'assets/showcase-ctf.png'
+            image: 'assets/showcase-ctf.png',
+            width: 807,
+            height: 417
         },
         cpp: {
             title: 'Software Development in C++/C# & Python',
             desc: 'Developed software applications using C++ and C#, and created scripts in Python. My latest project is a Windows desktop cleaner application built with WinUI3.',
             tags: ['Visual Studio', 'Visual Studio Code', 'PyCharm'],
-            image: 'assets/Showcase-WinUI3.png'
+            image: 'assets/Showcase-WinUI3.png',
+            width: 1665,
+            height: 936
         },
         mobile: {
             title: 'Android App Prototype',
             desc: 'A native Android application designed with card-based navigation, Material UI, and responsive layouts.',
             tags: ['Android Studio', 'Jetpack Compose', 'Android SDK', 'Material Design 3'],
-            image: 'assets/showcase-mobile.png'
+            image: 'assets/showcase-mobile.png',
+            width: 1600,
+            height: 899
         }
     };
 
@@ -119,6 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (imgElement) {
             imgElement.src = data.image;
             imgElement.alt = `${data.title} preview`;
+            if (data.width) imgElement.width = data.width;
+            if (data.height) imgElement.height = data.height;
         }
     }
 
@@ -162,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         [
             { label: 'esc', cls: 'key-esc' },
             ...['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12'].map((label) => ({ label })),
-            { cls: 'key-touchid', html: '<span class="key-touchid-sensor"></span>' }
+            { cls: 'key-touchid', nodes: [{ cls: 'key-touchid-sensor' }] }
         ],
         [
             ...['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='].map((label) => ({ label })),
@@ -174,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { label: '\\', cls: 'key-slash' }
         ],
         [
-            { cls: 'key-caps', html: '<span class="caps-dot"></span>caps lock' },
+            { cls: 'key-caps', nodes: [{ cls: 'caps-dot' }, 'caps lock'] },
             ...['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'"].map((label) => ({ label })),
             { label: 'return', cls: 'key-return' }
         ],
@@ -185,28 +199,75 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     ];
 
-    const BOTTOM_ROW_HTML = `
-        <span class="key key-fn">fn</span>
-        <span class="key key-ctrl">control</span>
-        <span class="key key-opt">option</span>
-        <span class="key key-cmd">command</span>
-        <span class="key key-space"></span>
-        <span class="key key-cmd">command</span>
-        <span class="key key-opt">option</span>
-        <div class="key-arrow-group">
-            <span class="key key-arrow key-arrow-left">◀</span>
-            <div class="key-arrow-stacked">
-                <span class="key key-arrow key-arrow-up">▲</span>
-                <span class="key key-arrow key-arrow-down">▼</span>
-            </div>
-            <span class="key key-arrow key-arrow-right">▶</span>
-        </div>`;
+    function buildBottomRow() {
+        const row = document.createElement('div');
+        row.className = 'kb-row';
 
-    function buildKey({ label = '', cls = '', html }) {
+        const makeKey = (cls, text) => {
+            const span = document.createElement('span');
+            span.className = `key ${cls}`;
+            span.textContent = text;
+            return span;
+        };
+
+        row.appendChild(makeKey('key-fn', 'fn'));
+        row.appendChild(makeKey('key-ctrl', 'control'));
+        row.appendChild(makeKey('key-opt', 'option'));
+        row.appendChild(makeKey('key-cmd', 'command'));
+
+        const space = document.createElement('span');
+        space.className = 'key key-space';
+        row.appendChild(space);
+
+        row.appendChild(makeKey('key-cmd', 'command'));
+        row.appendChild(makeKey('key-opt', 'option'));
+
+        const arrowGroup = document.createElement('div');
+        arrowGroup.className = 'key-arrow-group';
+
+        const left = makeKey('key-arrow key-arrow-left', '◀');
+        // ensure class string correct (makeKey prefixed key already)
+        left.className = 'key key-arrow key-arrow-left';
+        left.textContent = '◀';
+        arrowGroup.appendChild(left);
+
+        const stacked = document.createElement('div');
+        stacked.className = 'key-arrow-stacked';
+        const up = document.createElement('span');
+        up.className = 'key key-arrow key-arrow-up';
+        up.textContent = '▲';
+        const down = document.createElement('span');
+        down.className = 'key key-arrow key-arrow-down';
+        down.textContent = '▼';
+        stacked.appendChild(up);
+        stacked.appendChild(down);
+        arrowGroup.appendChild(stacked);
+
+        const right = document.createElement('span');
+        right.className = 'key key-arrow key-arrow-right';
+        right.textContent = '▶';
+        arrowGroup.appendChild(right);
+
+        row.appendChild(arrowGroup);
+        return row;
+    }
+    function buildKey({ label = '', cls = '', nodes }) {
         const span = document.createElement('span');
         span.className = cls ? `key ${cls}` : 'key';
-        if (html) span.innerHTML = html;
-        else span.textContent = label;
+        if (nodes) {
+            nodes.forEach((node) => {
+                if (typeof node === 'string') {
+                    span.appendChild(document.createTextNode(node));
+                } else {
+                    const child = document.createElement('span');
+                    child.className = node.cls || '';
+                    if (node.text) child.textContent = node.text;
+                    span.appendChild(child);
+                }
+            });
+        } else {
+            span.textContent = label;
+        }
         return span;
     }
 
@@ -221,10 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             frag.appendChild(row);
         });
 
-        const bottomRow = document.createElement('div');
-        bottomRow.className = 'kb-row';
-        bottomRow.innerHTML = BOTTOM_ROW_HTML;
-        frag.appendChild(bottomRow);
+        frag.appendChild(buildBottomRow());
 
         grid.appendChild(frag);
     }
@@ -296,7 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (wide && next) {
                 const stickTop = parseFloat(getComputedStyle(next).top) || 0;
                 const travel = card.offsetHeight + 24;
-                cover = clamp01(1 - (next.getBoundingClientRect().top - stickTop) / travel);
+                if (travel > 0) {
+                    cover = clamp01(1 - (next.getBoundingClientRect().top - stickTop) / travel);
+                }
             }
             card.style.setProperty('--cover', cover.toFixed(3));
         });
