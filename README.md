@@ -6,3 +6,16 @@ A landing-page style portfolio. The look follows my brand guideline (graphite, a
 - Icons: Simple Icons, Font Awesome and VS Code brand logos plus Lucide, inlined as an SVG sprite in `index.html` (no extra requests)
 - Banner artwork: `assets/src/hero-art.svg` rendered to `assets/hero-art.webp`
 - Plain HTML, plain CSS, and plain JavaScript
+
+## Toys and games
+
+Extras live in `toys.css` and `toys.js` (plain JS, no libraries, works with the existing CSP). A tiny canvas 3D renderer draws every toy, and all colours come from the tokens in `styles.css`.
+
+- Hero: a draggable glass icosahedron (click to re-skin) and a die that rolls one of six languages
+- Banner: click to drop 3D toys with physics, hover to nudge them
+- Skills: "Stack the build" timing game
+- Security & design: "Patch the bugs" 30 second whack-a-bug game
+- Contact: a donut orbiting the ring
+- Seven hidden amber shards across the page, with a counter bottom-right and a celebration when all are found
+- Cards tilt in 3D on hover, skill icons spin on click
+- Best scores and found shards are kept in `localStorage`; `prefers-reduced-motion` turns off idle motion

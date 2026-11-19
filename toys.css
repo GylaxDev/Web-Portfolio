@@ -1,0 +1,166 @@
+/* =========================================================
+   Toys and games
+   Same tokens as styles.css: graphite, amber, grain-glass panels,
+   outlined rounded controls, mono labels.
+   ========================================================= */
+main, .stack, .sec-head, .skill, .footer { position: relative; }
+
+/* ---------- Hero toys ---------- */
+.hero-toys { display: flex; justify-content: center; gap: 28px; padding: 0 24px 4px; }
+.js .hero-toys { animation: enter .9s .4s var(--ease) both; }
+.toy { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.toy canvas { display: block; width: 150px; height: 150px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; border-radius: var(--r-md); }
+.toy canvas.is-grabbing { cursor: grabbing; }
+.toy-cap { width: 0; min-width: 100%; min-height: 1.5em; font-family: var(--mono); font-size: 12px; letter-spacing: .01em; text-align: center; color: var(--muted); }
+.toy-cap b { color: var(--amber); font-weight: 600; }
+
+@media (min-width: 1100px) {
+    .hero-toys { position: absolute; inset: 150px 0 auto 0; height: 0; padding: 0; display: block; pointer-events: none; }
+    .toy { position: absolute; pointer-events: auto; }
+    .toy canvas { width: clamp(130px, 11vw, 176px); height: clamp(130px, 11vw, 176px); }
+    .toy-ico { left: 3.5vw; top: 6px; }
+    .toy-die { right: 3.5vw; top: 150px; }
+}
+
+/* ---------- Banner playground ---------- */
+.stage-toys { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
+.stage { cursor: pointer; }
+.stage a, .stage button { cursor: pointer; }
+.stage-ui {
+    position: absolute; z-index: 4; top: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 18px; max-width: calc(100% - 48px);
+    font-family: var(--mono); font-size: 13px; color: var(--muted); white-space: nowrap;
+    background: rgba(24, 24, 24, .8); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, .16); border-radius: 999px;
+}
+.stage-ui.is-solo { padding-right: 18px; }
+.stage-ui span { overflow: hidden; text-overflow: ellipsis; }
+.stage-clear { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; font: inherit; color: var(--text); cursor: pointer; transition: border-color .2s var(--ease), background-color .2s var(--ease); }
+.stage-clear:hover { border-color: #fff; background: rgba(255, 255, 255, .08); }
+.stage-clear[hidden] { display: none; }
+
+/* ---------- Contact toy ---------- */
+.cta-toy { position: absolute; z-index: 4; right: calc(24% - 26px); bottom: calc(12% - 26px); width: 180px; height: 180px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.cta-toy.is-grabbing { cursor: grabbing; }
+
+/* ---------- Game cards (same anatomy as the work-in-progress cards) ---------- */
+.play-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: stretch; margin-top: 20px; overflow: hidden; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--surface); transition: border-color .2s var(--ease); }
+.play-card:hover { border-color: rgba(255, 255, 255, .32); }
+.play-card.is-flip .play-art { order: -1; }
+html:not(.js) .play-card { display: none; }
+.play-body { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 16px; padding: 36px 44px; }
+.play-title { font-size: clamp(1.75rem, 3vw, 2.4rem); font-weight: 500; line-height: 1.1; letter-spacing: -0.025em; }
+.play-keys { display: flex; flex-wrap: wrap; gap: 8px; }
+.play-keys li { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 10px; border: 1px solid var(--line-strong); font-size: 13px; font-weight: 500; }
+.play-keys kbd { font-family: var(--mono); font-size: 12px; color: var(--amber); }
+
+.play-art { position: relative; min-height: 360px; margin: 12px; overflow: hidden; border-radius: var(--r-md); background: linear-gradient(165deg, #3a3a3a, #232323); outline-offset: -3px; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.play-art::after { content: ''; position: absolute; inset: 0; z-index: 6; background-image: var(--grain); background-size: 180px; opacity: .1; mix-blend-mode: overlay; pointer-events: none; }
+.play-art canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#stackGame { cursor: pointer; }
+#bugGame { min-height: 410px; }
+
+.play-hud { position: absolute; z-index: 4; top: 14px; left: 14px; right: 14px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; font-family: var(--mono); font-size: 13px; }
+.play-hud span { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(24, 24, 24, .6); color: var(--muted); }
+.play-hud b { margin-left: 4px; font-weight: 600; color: var(--amber); }
+
+.play-overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 28px; text-align: center; background: rgba(24, 24, 24, .58); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: opacity .3s var(--ease), visibility .3s; }
+.play-overlay.is-off { opacity: 0; visibility: hidden; pointer-events: none; }
+.play-overlay.is-passive { pointer-events: none; }
+.play-overlay h4 { font-size: 26px; font-weight: 500; letter-spacing: -0.015em; }
+.play-overlay p { max-width: 26ch; font-size: 15px; line-height: 1.55; color: var(--muted); }
+
+/* Bug board: a slightly tilted 3x3 of dark wells */
+.bug-board { position: absolute; inset: 0; display: grid; place-items: center; padding: 58px 22px 26px; perspective: 780px; }
+.bug-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; width: min(100%, 296px); transform: rotateX(18deg); transform-style: preserve-3d; }
+.hole {
+    position: relative; aspect-ratio: 1; padding: 0; overflow: hidden; cursor: pointer;
+    border-radius: 22px; border: 1px solid var(--line-strong);
+    background: radial-gradient(circle at 50% 75%, #0b0b0b, #1c1c1c 72%);
+    box-shadow: inset 0 10px 18px rgba(0, 0, 0, .75), 0 6px 0 rgba(255, 255, 255, .04), 0 16px 24px rgba(0, 0, 0, .35);
+    transition: border-color .2s var(--ease);
+}
+.hole:hover { border-color: #fff; }
+.critter { position: absolute; inset: 14%; display: grid; place-items: center; border-radius: 16px; color: var(--amber); transform: translateY(135%); transition: transform .16s var(--ease); pointer-events: none; }
+.critter .icon { width: 64%; height: 64%; stroke-width: 1.7; }
+.hole.is-up .critter { transform: none; }
+.hole.t-crit .critter { background: var(--amber); color: var(--ink); }
+.hole.t-fw .critter { color: #fff; border: 1.5px solid rgba(255, 255, 255, .7); }
+.hole.is-hit .critter { transform: translateY(45%) scale(1.08, .5); transition-duration: .12s; }
+.pop { position: absolute; z-index: 2; left: 50%; top: 22%; font: 700 20px/1 var(--mono); color: var(--amber); pointer-events: none; animation: rise .7s var(--ease) forwards; }
+.pop.neg { color: #fff; }
+@keyframes rise { from { opacity: 1; transform: translate(-50%, 14px) scale(.8); } to { opacity: 0; transform: translate(-50%, -30px) scale(1.15); } }
+
+/* ---------- Hidden shards ---------- */
+.shard { position: absolute; z-index: 6; width: 42px; height: 42px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; transition: transform .25s var(--ease); animation: bob 3.6s ease-in-out infinite; }
+.shard canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
+.shard:hover { transform: scale(1.2); }
+@keyframes bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+.shard-ghost { position: fixed; z-index: 120; pointer-events: none; }
+
+.shard-hud {
+    position: fixed; z-index: 60; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px 10px 12px;
+    font: 600 13px var(--mono); color: var(--text); cursor: pointer;
+    background: rgba(24, 24, 24, .8); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, .16); border-radius: 18px; transition: border-color .2s var(--ease);
+}
+.shard-hud:hover, .shard-hud.is-done { border-color: var(--amber); }
+.shard-hud .icon { width: 18px; height: 18px; color: var(--amber); }
+.shard-count { color: var(--amber); }
+.shard-label { font-weight: 500; color: var(--muted); }
+.shard-hud.is-bump { animation: bump .55s var(--ease); }
+@keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.14); } 100% { transform: scale(1); } }
+.shard-tip { position: absolute; right: 0; bottom: calc(100% + 10px); width: max-content; max-width: min(260px, calc(100vw - 36px)); padding: 10px 14px; border-radius: var(--r-sm); border: 1px solid var(--line-strong); background: rgba(24, 24, 24, .94); font: 500 13px/1.45 var(--font); color: var(--text); text-align: left; opacity: 0; transform: translateY(4px); pointer-events: none; transition: opacity .2s var(--ease), transform .2s var(--ease); }
+.shard-hud:hover .shard-tip, .shard-hud:focus-visible .shard-tip, .shard-hud.show-tip .shard-tip { opacity: 1; transform: none; }
+
+.celebrate { position: fixed; inset: 0; z-index: 90; width: 100%; height: 100%; pointer-events: none; }
+
+/* ---------- Card tilt and spinning skill icons ---------- */
+.project, .wip-card, .tile { position: relative; }
+.tilt { transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .3s var(--ease), border-color .2s var(--ease); }
+.tilt::before { content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none; opacity: 0; background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, .07), transparent 60%); transition: opacity .3s var(--ease); }
+.tilt:hover::before { opacity: 1; }
+.tag-icon { cursor: pointer; }
+.tag-icon.is-spin { animation: spin3d .9s var(--ease); }
+@keyframes spin3d { from { transform: perspective(300px) rotateY(0); } to { transform: perspective(300px) rotateY(360deg); } }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+    .cta-toy { right: 20px; bottom: 20px; width: 120px; height: 120px; }
+    .ring-circle { display: none; }
+}
+
+@media (min-width: 701px) and (max-width: 1000px) {
+    .ring-squircle { display: none; }
+}
+
+@media (max-width: 900px) {
+    .play-card { grid-template-columns: 1fr; }
+    .play-card.is-flip .play-art { order: 0; }
+    .play-body { padding: 8px 28px 32px; order: -1; }
+    .play-card.is-flip .play-body { order: 1; }
+    .play-art { min-height: 340px; }
+}
+
+@media (max-width: 700px) {
+    .stage-ui { top: 84px; left: 24px; transform: none; max-width: calc(100% - 48px); }
+    .cta-toy { top: 14px; bottom: auto; right: 12px; width: 84px; height: 84px; }
+    .cta { padding-top: 76px; }
+}
+
+@media (max-width: 600px) {
+    .hero-toys { gap: 14px; padding: 0 20px; }
+    .toy canvas { width: 128px; height: 128px; }
+    .play-body { padding: 6px 22px 28px; }
+    .shard-head { left: auto !important; right: 0; top: 0 !important; }
+    .shard-hud { right: 12px; padding: 9px 12px 9px 10px; }
+    .shard-label { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js .hero-toys { animation: none; }
+    .shard { animation: none; }
+    .tag-icon.is-spin { animation: none; }
+    .shard-hud.is-bump { animation: none; }
+}
