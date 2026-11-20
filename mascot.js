@@ -809,20 +809,20 @@ void main(){
                 else { rrect(c, cx - w / 2, cy - hh / 2, w, hh, w / 2); c.fill(); }
                 c.restore();
             } else if (type === 'arcUp') {
-                c.lineWidth = w * 0.78;
+                c.lineWidth = 7;
                 c.beginPath(); c.moveTo(cx - w * 0.9, cy + h * 0.1); c.quadraticCurveTo(cx, cy - h * 0.36, cx + w * 0.9, cy + h * 0.1); c.stroke();
             } else if (type === 'arcDown') {
-                c.lineWidth = w * 0.6;
+                c.lineWidth = 7;
                 c.beginPath(); c.moveTo(cx - w * 0.95, cy - h * 0.04); c.quadraticCurveTo(cx, cy + h * 0.24, cx + w * 0.95, cy - h * 0.04); c.stroke();
             } else if (type === 'heart') {
-                const s = h * 0.62 * (0.92 + 0.08 * Math.sin(T * 7));
+                const s = h * 1.0 * (0.92 + 0.08 * Math.sin(T * 7));
                 c.fillStyle = css(CORAL);
                 c.beginPath(); c.moveTo(cx, cy + s * 0.4);
                 c.bezierCurveTo(cx - s * 0.98, cy - s * 0.05, cx - s * 0.55, cy - s * 0.65, cx, cy - s * 0.22);
                 c.bezierCurveTo(cx + s * 0.55, cy - s * 0.65, cx + s * 0.98, cy - s * 0.05, cx, cy + s * 0.4);
                 c.fill();
             } else if (type === 'spiral') {
-                const R = h * 0.34;
+                const R = h * 0.5;
                 c.lineWidth = 5; c.beginPath();
                 for (let a = 0; a <= TAU * 2.4; a += 0.2) {
                     const r = R * a / (TAU * 2.4), an = a + T * 6 * side;
