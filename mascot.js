@@ -1,5 +1,5 @@
 /* =========================================================
-   Mascot: a yellow rabbit built from rounded cubes and capsules.
+   Mascot: a yellow lop-eared rabbit built from soft rounded blobs.
    Plain JavaScript and raw WebGL, no libraries. It waves, follows
    the cursor, can be picked up and thrown, has a dozen emotions,
    and works as a small guide for the page (tips, menu, tour).
@@ -32,11 +32,10 @@
     };
     const AMBER = hex2rgb(cssVar('--amber', '#ffbe00'));
     const INK = hex2rgb(cssVar('--ink', '#141414'));
-    const LO = [168, 92, 6];
+    const LO = [205, 124, 8];
     const HI = [255, 224, 104];
     const CORAL = [236, 106, 64];
-    const TEAR = [150, 214, 255];
-    const TOOTH = [255, 247, 236];
+    const PINK = [244, 124, 132];
     const css = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
     const n3 = (c) => c.map((v) => v / 255);
 
@@ -159,6 +158,16 @@
         return { v: new Float32Array(v), i: new Uint16Array(idx) };
     }
 
+    // Squash a mesh in z (normals corrected). Turns a capsule into a flat, floppy paddle.
+    function flatten(g, k) {
+        for (let i = 0; i < g.v.length; i += 6) {
+            g.v[i + 2] *= k;
+            const nx = g.v[i + 3], ny = g.v[i + 4], nz = g.v[i + 5] / k, l = Math.hypot(nx, ny, nz) || 1;
+            g.v[i + 3] = nx / l; g.v[i + 4] = ny / l; g.v[i + 5] = nz / l;
+        }
+        return g;
+    }
+
     /* =========================================================
        Rabbit layout, measured from the flat design. Units are
        arbitrary, origin is the floor between the feet, y is up.
@@ -166,75 +175,66 @@
        measured counter-clockwise from "straight down".
        ========================================================= */
     const CAP_R = 0.155;
-    const HEAD = { w: 1.7, h: 1.45, d: 1.3, r: 0.56 };
-    const BODY = { w: 0.84, h: 0.66, d: 0.62, r: 0.26 };
-    const BODY_Y = 0.89;
-    const HEAD_POS = [0, 2.0, 0.02];
+    const HEAD = { w: 2.0, h: 1.5, d: 1.5, r: 0.72 };      // wide, squishy mochi head
+    const BODY = { w: 0.8, h: 0.78, d: 0.62, r: 0.28 };    // tiny round body
+    const BODY_Y = 0.6;
+    const HEAD_POS = [0, 1.66, 0.02];
+    const FOOT = { w: 0.42, h: 0.4, d: 0.58 };             // little oval feet
+    const TAIL = { r: 0.2, pos: [0.42, 0.42, -0.26] };     // round cotton tail peeking out behind
+    // Long flat ears that flop out and down. root = how far the ear is tucked into the head.
+    const EAR = { len: 1.3, w: 0.62, d: 0.2, root: 0.22 };
+    const EAR_DROOP = 0.55;   // rest angle below horizontal (radians); 1.57 would hang straight down
+    const HALF_W = 1.75;      // half the width of the whole figure, ears included
     // Everything is mirrored around x = 0: each right limb is the left one with x flipped.
-    const EAR_SPREAD = 0.28;   // how far the ears lean outward at rest (radians)
     const LIMB = {
-        earL: { pivot: [-0.4, 0.62, -0.05], axis: 0.42 },
-        earR: { pivot: [0.4, 0.62, -0.05], axis: 0.42 },
-        armL: { pivot: [-0.58, 1.0, 0.04], axis: 0.26 },
-        armR: { pivot: [0.58, 1.0, 0.04], axis: 0.26 },
-        legL: { pivot: [-0.25, 0.32, 0], axis: 0.17 },
-        legR: { pivot: [0.25, 0.32, 0], axis: 0.17 }
+        earL: { pivot: [-0.5, 0.45, -0.1] },
+        earR: { pivot: [0.5, 0.45, -0.1] },
+        armL: { pivot: [-0.4, 0.76, 0.06], axis: 0.1 },
+        armR: { pivot: [0.4, 0.76, 0.06], axis: 0.1 },
+        legL: { pivot: [-0.24, 0.23, 0.08], axis: 0.06 },
+        legR: { pivot: [0.24, 0.23, 0.08], axis: 0.06 }
     };
-    const EAR_L = (spread) => Math.PI + EAR_SPREAD + spread;
-    const EAR_R = (spread) => Math.PI - EAR_SPREAD - spread;
+    // Ear angles use the same convention as the limbs. A positive "spread" droops the ear further.
+    const EAR_L = (spread) => Math.PI * 1.5 + EAR_DROOP + spread;
+    const EAR_R = (spread) => Math.PI * 0.5 - EAR_DROOP - spread;
     const FACE_H = 320, FACE_W = Math.round(FACE_H * HEAD.w / HEAD.h), FACE_K = FACE_H / 256, FACE_CX = 128 * HEAD.w / HEAD.h;
-    const TOP = 3.2;    // height of the ear tips
-    const MID_Y = 1.6;  // vertical centre of the whole figure
+    const TOP = 2.45;   // height of the top of the head
+    const MID_Y = 1.22; // vertical centre of the whole figure
 
     /* =========================================================
        Emotions: eye shapes, mouth, ears and arms for each mood
        ========================================================= */
     const BASE = {
         eye: ['pill', 'pill'], ew: 1, sL: 1, sR: 1, lid: 0, lidA: 0,
-        mw: 0.18, mo: 0.01, mc: 0.035, mu: 0, tongue: 0, blush: 0, ey: 0, my: 0, mx: 0, teeth: 0, tears: 0, sweat: 0,
+        mw: 0.18, mo: 0.01, mc: 0.035, mu: 0, tongue: 0, blush: 0.6, ey: 0, my: 0, mx: 0,
         ear: [0, 0], roll: 0, arms: 'rest', bob: 1, look: null
     };
     const EMO = {
         happy: {},
-        joy: { eye: ['arcUp', 'arcUp'], mw: 0.27, mo: 0.15, mc: 0.03, blush: 0.3, ear: [-0.1, -0.1], arms: 'cheer' },
-        wink: { eye: ['pill', 'arcUp'], mw: 0.2, mo: 0.015, mc: 0.04, mx: 0.02, blush: 0.15 },
+        joy: { eye: ['arcUp', 'arcUp'], mw: 0.24, mo: 0.05, mc: 0.045, blush: 0.75, ear: [-0.1, -0.1], arms: 'cheer' },
+        wink: { eye: ['pill', 'arcUp'], mw: 0.2, mo: 0.015, mc: 0.04, mx: 0.02, blush: 0.6 },
         surprised: { ew: 1.12, sL: 1.3, sR: 1.3, mw: 0.15, mo: 0.2, mu: 0.5, ear: [-0.35, -0.35], arms: 'shrug' },
         curious: { sL: 1.25, sR: 0.85, mw: 0.2, mo: 0.06, mx: 0.06, ear: [-0.3, 0.15], roll: 0.14 },
         thinking: { sL: 0.9, sR: 0.9, mw: 0.16, mo: 0.04, mc: -0.03, mx: -0.05, arms: 'think', look: [-0.6, -0.8], roll: -0.08, ear: [0.1, 0.1] },
-        sad: { sL: 0.85, sR: 0.85, lid: 0.3, lidA: -0.45, mw: 0.3, mo: 0.07, mc: -0.12, my: 0.03, ear: [0.75, 0.75], arms: 'down', bob: 0.4, roll: -0.05 },
-        love: { eye: ['heart', 'heart'], mw: 0.2, mo: 0.03, mc: 0.04, blush: 0.55, arms: 'love' },
-        sleepy: { eye: ['arcDown', 'arcDown'], mw: 0.12, mo: 0.09, mu: 0.5, ear: [0.85, 0.85], arms: 'down', bob: 0.5, roll: -0.12 },
+        sad: { sL: 0.85, sR: 0.85, lid: 0.3, lidA: -0.45, mw: 0.3, mo: 0.07, mc: -0.12, my: 0.03, blush: 0.35, ear: [0.6, 0.6], arms: 'down', bob: 0.4, roll: -0.05 },
+        love: { eye: ['heart', 'heart'], mw: 0.2, mo: 0.03, mc: 0.04, blush: 0.9, arms: 'love' },
+        sleepy: { eye: ['arcDown', 'arcDown'], mw: 0.12, mo: 0.09, mu: 0.5, ear: [0.65, 0.65], arms: 'down', bob: 0.5, roll: -0.12 },
         dizzy: { eye: ['spiral', 'spiral'], mw: 0.22, mo: 0.07, arms: 'dizzy', ear: [0.3, 0.3] },
-        grumpy: { sL: 0.8, sR: 0.8, lid: 0.38, lidA: 0.42, mw: 0.28, mo: 0.05, mc: -0.08, ear: [0.5, 0.5], arms: 'hips', bob: 0.5 },
-        cheeky: { eye: ['arcUp', 'arcUp'], mw: 0.2, mo: 0.1, mc: 0.04, tongue: 1, blush: 0.25, mx: 0.02 },
-        // --- more feelings ---
-        playful: { eye: ['pill', 'arcUp'], mw: 0.26, mo: 0.13, mc: 0.03, mx: 0.02, blush: 0.3, ear: [-0.1, -0.25], roll: 0.08 },
-        laugh: { eye: ['arcUp', 'arcUp'], mw: 0.3, mo: 0.21, mc: 0.02, tongue: 0.6, blush: 0.3, ear: [-0.15, -0.15], arms: 'cheer' },
-        smug: { sL: 0.85, sR: 0.85, lid: 0.42, lidA: 0.12, mw: 0.26, mo: 0.02, mc: 0.07, mx: 0.05, blush: 0.1, roll: 0.1, ear: [-0.15, 0.1], arms: 'hips' },
-        shy: { sL: 0.85, sR: 0.85, mw: 0.1, mo: 0.01, mc: 0.035, blush: 0.7, look: [-0.7, 0.7], ear: [0.35, 0.35], arms: 'down', roll: -0.1 },
-        unimpressed: { sL: 0.8, sR: 0.8, lid: 0.5, lidA: 0, mw: 0.1, mo: 0.006, mc: 0, look: [0.8, 0.1], ear: [0.45, 0.45], bob: 0.6 },
-        worried: { sL: 1.05, sR: 1.05, lid: 0.2, lidA: -0.5, mw: 0.17, mo: 0.03, mc: -0.07, mx: -0.02, sweat: 1, look: [0.5, -0.4], ear: [0.55, 0.55], arms: 'shrug', roll: 0.06 },
-        flustered: { sL: 1.05, sR: 1.05, lid: 0.15, lidA: -0.3, mw: 0.15, mo: 0.09, mc: -0.02, blush: 0.65, sweat: 1, look: [0.6, 0.6], ear: [0.3, 0.55], arms: 'shrug', roll: 0.1 },
-        crying: { sL: 0.9, sR: 0.9, lid: 0.32, lidA: -0.55, mw: 0.27, mo: 0.14, mc: -0.12, mu: 0.35, tears: 1, blush: 0.3, ear: [0.9, 0.9], arms: 'down', bob: 0.35, roll: -0.06 },
-        gloomy: { sL: 0.85, sR: 0.85, lid: 0.45, lidA: -0.18, mw: 0.13, mo: 0.03, mc: -0.07, look: [0, 0.6], ear: [0.9, 0.9], arms: 'down', bob: 0.3, roll: -0.1 },
-        angry: { sL: 0.78, sR: 0.78, lid: 0.42, lidA: 0.5, mw: 0.28, mo: 0.07, mc: -0.05, teeth: 1, blush: 0.35, ear: [0.6, 0.6], arms: 'hips', bob: 0.5 },
-        furious: { sL: 0.65, sR: 0.65, lid: 0.5, lidA: 0.6, mw: 0.33, mo: 0.22, mc: -0.06, teeth: 1, blush: 0.5, ear: [0.95, 0.95], arms: 'hips', bob: 0.3 }
+        grumpy: { sL: 0.8, sR: 0.8, lid: 0.38, lidA: 0.42, mw: 0.28, mo: 0.05, mc: -0.08, blush: 0.25, ear: [0.35, 0.35], arms: 'hips', bob: 0.5 },
+        cheeky: { eye: ['arcUp', 'arcUp'], mw: 0.2, mo: 0.1, mc: 0.04, tongue: 1, blush: 0.7, mx: 0.02 }
     };
     Object.keys(EMO).forEach((k) => { EMO[k] = Object.assign({}, BASE, EMO[k]); });
 
     // Arm angles [left, right]; right arm is kept above pi to avoid wrapping
     const POSE = {
-        rest: [-0.45, 0.45], down: [-0.2, 0.2], cheer: [-2.43, 2.43], held: [-2.6, 2.6],
-        shrug: [-1.2, 1.2], think: [-0.2, 3.9], love: [-2.2, 2.2], dizzy: [-1.0, 1.0], hips: [-0.75, 0.75]
+        rest: [-0.6, 0.6], down: [-0.3, 0.3], cheer: [-2.15, 2.15], held: [-2.3, 2.3],
+        shrug: [-1.2, 1.2], think: [-0.2, 3.9], love: [-2.0, 2.0], dizzy: [-1.0, 1.0], hips: [-0.75, 0.75]
     };
-    const NUM_KEYS = ['ew', 'sL', 'sR', 'lid', 'lidA', 'mw', 'mo', 'mc', 'mu', 'tongue', 'blush', 'ey', 'my', 'mx', 'teeth', 'tears', 'sweat'];
+    const NUM_KEYS = ['ew', 'sL', 'sR', 'lid', 'lidA', 'mw', 'mo', 'mc', 'mu', 'tongue', 'blush', 'ey', 'my', 'mx'];
 
     const FX_FOR = {
         joy: ['star'], love: ['heart', 'heart', 'heart'], dizzy: ['star', 'star'], sad: ['drop'],
-        surprised: ['!'], curious: ['?'], thinking: ['...'], cheeky: ['star'], grumpy: ['!'],
-        playful: ['star'], laugh: ['star', 'star'], smug: ['star'], shy: ['heart'], unimpressed: ['...'],
-        worried: ['drop', '?'], flustered: ['!', 'drop'], crying: ['drop', 'drop'], gloomy: ['...'],
-        angry: ['anger'], furious: ['anger', 'anger']
+        surprised: ['!'], curious: ['?'], thinking: ['...'], cheeky: ['star'], grumpy: ['!']
     };
 
     /* =========================================================
@@ -288,7 +288,7 @@ void main(){
   // matte clay: wrapped diffuse over a wide ramp, no specular and no rim light
   float t = smoothstep(0.06, 0.96, clamp(d * 0.5 + 0.5, 0.0, 1.0));
   vec3 col = t < 0.62 ? mix(uLo, uMid, t / 0.62) : mix(uMid, uHi, (t - 0.62) / 0.38 * 0.6);
-  col *= mix(0.78, 1.0, smoothstep(-0.95, 0.3, n.y));          // soft occlusion on undersides
+  col *= mix(0.9, 1.0, smoothstep(-0.95, 0.3, n.y));          // soft occlusion on undersides
   col *= 1.0 - uShade * smoothstep(0.1, 1.0, vNL.y);           // the big head shades what is under it
   if (uHasFace > 0.5) {
     vec2 uv = vec2(vL.x / uHead.x + 0.5, 0.5 - vL.y / uHead.y);
@@ -361,10 +361,21 @@ void main(){
                 return { vb, ib, n: g.i.length };
             };
             const cap = (axis) => mk(roundedBox(CAP_R * 2, axis + CAP_R * 2, CAP_R * 2, CAP_R, 16));
+            // ear: a flat paddle, narrow at the root and wider toward the rounded tip
+            const earGeo = () => {
+                const g = flatten(roundedBox(EAR.w, EAR.len, EAR.w, EAR.w / 2, 18), EAR.d / EAR.w);
+                for (let i = 0; i < g.v.length; i += 6) {
+                    const t = clamp((EAR.len / 2 - g.v[i + 1]) / EAR.len / 0.6, 0, 1);
+                    g.v[i] *= 0.5 + 0.5 * t * (2 - t);
+                }
+                return g;
+            };
             meshes = {
-                body: mk(roundedBox(BODY.w, BODY.h, BODY.d, BODY.r, 12)),
-                head: mk(roundedBox(HEAD.w, HEAD.h, HEAD.d, HEAD.r, 14)),
-                ear: cap(LIMB.earL.axis), arm: cap(LIMB.armL.axis), leg: cap(LIMB.legL.axis)
+                body: mk(roundedBox(BODY.w, BODY.h, BODY.d, BODY.r, 14)),
+                head: mk(roundedBox(HEAD.w, HEAD.h, HEAD.d, HEAD.r, 20)),
+                ear: mk(earGeo()), arm: cap(LIMB.armL.axis),
+                leg: mk(roundedBox(FOOT.w, FOOT.h, FOOT.d, FOOT.h / 2, 12)),
+                tail: mk(roundedBox(TAIL.r * 2, TAIL.r * 2, TAIL.r * 2, TAIL.r, 10))
             };
             faceTex = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, faceTex);
@@ -387,7 +398,7 @@ void main(){
         let vw = 0, vh = 0, u = 50, S = 300, D = 12, VP = I4(), margin = 12;
         function layout() {
             vw = window.innerWidth; vh = window.innerHeight;
-            u = clamp(vh * 0.068, 40, 62) * 1.1 * (vw < 600 ? 0.85 : 1);
+            u = clamp(vh * 0.068, 40, 62) * 1.18 * (vw < 600 ? 0.85 : 1);
             S = Math.round(u * 6.2);
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             cv.width = cv.height = Math.round(S * dpr);
@@ -396,7 +407,7 @@ void main(){
             const fov = 2 * Math.atan(S / 2 / u / D);
             VP = mul(persp(fov, 1, 1, 40), mT(0, -MID_Y, -D));
             margin = 10 + probe.offsetHeight;
-            hit.style.width = Math.round(2.1 * u) + 'px';
+            hit.style.width = Math.round(2 * HALF_W * u) + 'px';
             hit.style.height = Math.round(TOP * u) + 'px';
             shadowEl.style.width = Math.round(2.3 * u) + 'px';
             shadowEl.style.height = Math.round(0.6 * u) + 'px';
@@ -431,10 +442,10 @@ void main(){
             headYaw: spr(150, 14), headPitch: spr(150, 14), headRoll: spr(130, 10, 0), bodyYaw: spr(90, 11),
             armL: spr(200, 14, -0.45), armR: spr(200, 14, 0.45),
             legL: spr(180, 12, 0), legR: spr(180, 12, 0),
-            earL: spr(170, 6, EAR_L(0)), earR: spr(170, 6, EAR_R(0)),
+            earL: spr(110, 6.5, EAR_L(0)), earR: spr(110, 6.5, EAR_R(0)),
             lagHead: lag(), lagBody: lag(), lagArmL: lag(), lagArmR: lag(), lagLegL: lag(), lagLegR: lag()
         };
-        const face = { open: [1, 1], eye: ['pill', 'pill'], eyeFrom: ['pill', 'pill'], eyeP: [1, 1], eyeSnap: [null, null], eyeAlign: [null, null], geom: [null, null], shiftX: 0, shiftY: 0, jx: 0 };
+        const face = { open: [1, 1], eye: ['pill', 'pill'], eyeFrom: ['pill', 'pill'], eyeP: 1, shiftX: 0, shiftY: 0 };
         NUM_KEYS.forEach((k) => { face[k] = BASE[k]; });
         const fg = {};                                   // one glide per face number
         NUM_KEYS.forEach((k) => { fg[k] = glide(BASE[k]); });
@@ -467,8 +478,8 @@ void main(){
         let down = null;
 
         const floorY = () => (hidden ? vh + 2.6 * u : vh - margin);
-        const xmin = () => 1.05 * u + 4;
-        const xmax = () => vw - 1.05 * u - 4;
+        const xmin = () => HALF_W * u + 4;
+        const xmax = () => vw - HALF_W * u - 4;
 
         /* =========================================================
            Emotions
@@ -485,7 +496,6 @@ void main(){
             el.className = 'mascot-fx mascot-fx-' + (kind.length > 1 && /^[a-z]/.test(kind) ? kind : 'txt');
             if (kind === 'heart') el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.800-8 11-8 11z"/></svg>';
             else if (kind === 'star') el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2l2.6 6.9 7.400.4-5.800 4.600 2 7.100L12 17l-6.200 4 2-7.100L2 9.300l7.400-.4z"/></svg>';
-            else if (kind === 'anger') el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 9c3 0 5-2 5-5M20 9c-3 0-5-2-5-5M4 15c3 0 5 2 5 5M20 15c-3 0-5 2-5 5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>';
             else if (kind === 'drop') el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3c3 4.500 6 7.600 6 11a6 6 0 0 1-12 0c0-3.400 3-6.500 6-11z"/></svg>';
             else el.textContent = kind;
             const hx = st.x, hy = st.y - HEAD_POS[1] * u * st.sy.x * st.qy;
@@ -560,8 +570,8 @@ void main(){
             if (ay - bh - 12 >= 8) {
                 left = clamp(ax - 34, 8, vw - bw - 8); top = ay - bh - 12; tx = clamp(ax - left, 22, bw - 22);
             } else {
-                const right = vw - (st.x + 1.2 * u), leftRoom = st.x - 1.2 * u;
-                left = (right >= bw + 12 || right >= leftRoom) ? st.x + 1.1 * u + 8 : st.x - 1.1 * u - bw - 8;
+                const right = vw - (st.x + HALF_W * u), leftRoom = st.x - HALF_W * u;
+                left = (right >= bw + 12 || right >= leftRoom) ? st.x + HALF_W * u + 8 : st.x - HALF_W * u - bw - 8;
                 left = clamp(left, 8, vw - bw - 8);
                 top = clamp(st.y - 2.0 * u - bh / 2, 8, vh - bh - 8);
             }
@@ -711,12 +721,12 @@ void main(){
             clearTimeout(clickTimer);
             if (hidden) { unhide(); return; }
             if (bOn && mode !== 'tip') { hideBubble(); return; }
-            if (n >= 7) { emote('furious', 3200); quip('Okay okay, that is enough!', 'furious', 2600); pokes = []; return; }
+            if (n >= 7) { emote('grumpy', 3200); quip('Okay okay, that is enough!', 'grumpy', 2600); pokes = []; return; }
             if (n >= 4) { emote('dizzy', 1800); quip('Whoa, everything is spinning...', 'dizzy', 2000); return; }
-            if (part.startsWith('ear')) { st[part].v += 14; emote('curious', 1600); }
+            if (part.startsWith('ear')) { st[part].v += 8; emote('curious', 1600); }
             else if (part === 'armR') { waveUntil = T + 1.6; emote('joy', 1600); }
             else if (part.startsWith('leg')) { st.vy = -u * 9; st.grounded = false; emote('surprised', 900); }
-            else if (part === 'head') { st.earL.v += 10; st.earR.v -= 10; emote('surprised', 700); setTimeout(() => emote('joy', 1400), 650); }
+            else if (part === 'head') { st.earL.v += 6; st.earR.v -= 6; emote('surprised', 700); setTimeout(() => emote('joy', 1400), 650); }
             else emote('joy', 1600);
             const key = part.startsWith('ear') ? 'ear' : part.startsWith('leg') ? 'leg' : part;
             if (n === 1) {
@@ -822,174 +832,35 @@ void main(){
                 c.stroke();
             }
         }
-        /* Eye morphing. Every eye shape is turned into a closed outline of the same
-           number of points, so one shape can bend and flow into another instead of
-           fading. Stroke shapes (pill, arcs, spiral) share a structure: side, end cap,
-           side, start cap, so they line up point for point. Filled shapes (heart,
-           round) are lined up once, when the change starts. */
-        const EN_S = 56, EN_C = 24, EN_N = 2 * EN_S + 2 * EN_C;
-        function strokeOutline(fn, r, dir) {
-            const P = [], Tn = [];
-            for (let k = 0; k <= EN_S; k++) {
-                const t = k / EN_S, a = fn(Math.max(0, t - 0.003)), b = fn(Math.min(1, t + 0.003));
-                let dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy);
-                if (l < 1e-6) { dx = dir[0]; dy = dir[1]; } else { dx /= l; dy /= l; }
-                P.push(fn(t)); Tn.push([dx, dy]);
-            }
-            const out = [];
-            for (let k = 0; k < EN_S; k++) out.push([P[k][0] - Tn[k][1] * r, P[k][1] + Tn[k][0] * r]);
-            let e = P[EN_S], te = Tn[EN_S];
-            for (let k = 0; k < EN_C; k++) {
-                const th = Math.PI * k / EN_C, cs = Math.cos(th) * r, sn = Math.sin(th) * r;
-                out.push([e[0] - te[1] * cs + te[0] * sn, e[1] + te[0] * cs + te[1] * sn]);
-            }
-            for (let k = EN_S; k >= 1; k--) out.push([P[k][0] + Tn[k][1] * r, P[k][1] - Tn[k][0] * r]);
-            e = P[0]; te = Tn[0];
-            for (let k = 0; k < EN_C; k++) {
-                const th = Math.PI * k / EN_C, cs = Math.cos(th) * r, sn = Math.sin(th) * r;
-                out.push([e[0] + te[1] * cs - te[0] * sn, e[1] - te[0] * cs - te[1] * sn]);
-            }
-            return out;
-        }
-        function resampleClosed(pts, n) {
-            const L = [0];
-            for (let i = 1; i <= pts.length; i++) { const a = pts[i - 1], b = pts[i % pts.length]; L.push(L[i - 1] + Math.hypot(b[0] - a[0], b[1] - a[1])); }
-            const total = L[L.length - 1], out = []; let j = 1;
-            for (let k = 0; k < n; k++) {
-                const d = total * k / n;
-                while (j < L.length - 1 && L[j] < d) j++;
-                const a = pts[(j - 1) % pts.length], b = pts[j % pts.length], u = (d - L[j - 1]) / Math.max(1e-6, L[j] - L[j - 1]);
-                out.push([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]);
-            }
-            return out;
-        }
-        const area = (pts) => { let s = 0; for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; s += a[0] * b[1] - b[0] * a[1]; } return s; };
-        const bez = (p0, p1, p2, p3, t) => { const u = 1 - t; return [u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0], u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]]; };
-        // Outline of one eye shape, relative to the eye's centre
-        function eyePoly(type, w, h, open, side) {
-            if (type === 'pill') {
-                const hh = Math.max(3, h * open), half = Math.max(0, (hh - w) / 2), sy = hh < w ? hh / w : 1;
-                const fn = (t) => [0, -half + 2 * half * t], pts = strokeOutline(fn, w / 2, [0, 1]);
-                if (sy !== 1) pts.forEach((q) => { q[1] *= sy; });
-                return { pts, stroke: true, col: INK, fn, r: w / 2, dir: [0, 1] };
-            }
-            if (type === 'arcUp' || type === 'arcDown') {
-                const up = type === 'arcUp', lw = w * (up ? 0.78 : 0.6), x0 = w * (up ? 0.9 : 0.95);
-                const y0 = up ? h * 0.1 : -h * 0.04, yc = up ? -h * 0.36 : h * 0.24, flip = side > 0 ? -1 : 1;
-                const fn = (t) => { const u = 1 - t, X = (-x0 * u * u + x0 * t * t) * flip; return [X, u * u * y0 + 2 * u * t * yc + t * t * y0]; };
-                return { pts: strokeOutline(fn, lw / 2, [flip, 0]), stroke: true, col: INK, fn, r: lw / 2, dir: [flip, 0] };
-            }
-            if (type === 'spiral') {
-                const R = h * 0.34, span = TAU * 2.4;
-                const fn = (t) => { const a = t * span, r = R * t, an = a + T * 6 * side; return [r * Math.cos(an), r * Math.sin(an)]; };
-                return { pts: strokeOutline(fn, 2.5, [1, 0]), stroke: true, col: INK, fn, r: 2.5, dir: [1, 0] };
-            }
-            if (type === 'heart') {
-                const s = h * 0.62 * (0.92 + 0.08 * Math.sin(T * 7)), raw = [];
-                for (let i = 0; i < 40; i++) raw.push(bez([0, s * 0.4], [-s * 0.98, -s * 0.05], [-s * 0.55, -s * 0.65], [0, -s * 0.22], i / 40));
-                for (let i = 0; i < 40; i++) raw.push(bez([0, -s * 0.22], [s * 0.55, -s * 0.65], [s * 0.98, -s * 0.05], [0, s * 0.4], i / 40));
-                return { pts: resampleClosed(raw, EN_N), stroke: false, col: CORAL };
-            }
-            const raw = [];                                   // 'round'
-            for (let i = 0; i < EN_N; i++) { const a = TAU * i / EN_N - Math.PI / 2; raw.push([Math.cos(a) * w * 0.78, Math.sin(a) * Math.max(3, h * open) * 0.38]); }
-            return { pts: raw, stroke: false, col: INK };
-        }
-        // Line up two outlines that are not both strokes: same winding, nearest start point
-        function alignPolys(A, B) {
-            const rev = (area(A) < 0) !== (area(B) < 0), Bp = rev ? B.slice().reverse() : B;
-            let best = 0, bd = Infinity;
-            for (let sft = 0; sft < EN_N; sft++) {
-                let d = 0;
-                for (let k = 0; k < EN_N; k += 4) { const a = A[k], b = Bp[(k + sft) % EN_N]; d += (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]); }
-                if (d < bd) { bd = d; best = sft; }
-            }
-            return { rev, s: best };
-        }
-        // The eye as it looks right now, mid-morph or not: outline plus colour
-        function eyeNow(i) {
-            const g = face.geom[i]; if (!g) return null;
-            const to = eyePoly(face.eye[i], g.w, g.h, 1, g.side);
-            if (face.eyeP[i] >= 1) return to;
-            const from = face.eyeSnap[i] ? face.eyeSnap[i] : eyePoly(face.eyeFrom[i], g.w, g.h, 1, g.side);
-            if (from.fn && to.fn) {
-                // both are strokes: bend the centre line, and let the thinner stroke lead so a thick
-                // pill never coils over itself on its way to a spiral
-                const a = EASE.standard(face.eyeP[i]), thin = to.r < from.r;
-                const pr = face.eyeP[i], ar = thin ? EASE.out(Math.min(1, pr * 1.7)) : 1 - EASE.out(Math.min(1, (1 - pr) * 1.7));
-                const fn = (t) => { const p = from.fn(t), q = to.fn(t); return [p[0] + (q[0] - p[0]) * a, p[1] + (q[1] - p[1]) * a]; };
-                return { pts: strokeOutline(fn, lerp(from.r, to.r, ar), [lerp(from.dir[0], to.dir[0], a), lerp(from.dir[1], to.dir[1], a)]), stroke: true, col: INK };
-            }
-            let tp = to.pts;
-            if (!(from.stroke && to.stroke)) {
-                if (!face.eyeAlign[i]) face.eyeAlign[i] = alignPolys(from.pts, to.pts);
-                const al = face.eyeAlign[i], arr = al.rev ? to.pts.slice().reverse() : to.pts;
-                tp = from.pts.map((_, k) => arr[(k + al.s) % EN_N]);
-            }
-            const a = EASE.standard(face.eyeP[i]);
-            return {
-                pts: from.pts.map((p, k) => [p[0] + (tp[k][0] - p[0]) * a, p[1] + (tp[k][1] - p[1]) * a]),
-                stroke: to.stroke && from.stroke,
-                col: [lerp(from.col[0], to.col[0], a), lerp(from.col[1], to.col[1], a), lerp(from.col[2], to.col[2], a)]
-            };
-        }
+        // Swapping eye shapes: the old one shrinks and fades while the new one pops in
         function drawEyeMix(c, cx, cy, w, h, i, side, f) {
-            f.geom[i] = { w, h, side };
-            if (f.eyeP[i] >= 1) { drawEye(c, f.eye[i], cx, cy, w, h, f.open[i], side, f); return; }
-            const m = eyeNow(i); if (!m) return;
-            c.save();
-            if (f.lid > 0.01 || Math.abs(f.lidA) > 0.01) {
-                const hh = Math.max(3, h * f.open[i]), inner = -side, lidY = cy - hh / 2 + f.lid * hh, k = Math.tan(f.lidA) * inner;
-                c.beginPath();
-                c.moveTo(cx - 80, lidY + k * -80); c.lineTo(cx + 80, lidY + k * 80);
-                c.lineTo(cx + 80, cy + 120); c.lineTo(cx - 80, cy + 120); c.closePath(); c.clip();
-            }
-            c.fillStyle = css(m.col); c.beginPath();
-            m.pts.forEach((p, k) => { if (k === 0) c.moveTo(cx + p[0], cy + p[1]); else c.lineTo(cx + p[0], cy + p[1]); });
-            c.closePath(); c.fill(); c.restore();
+            const cur = f.eye[i], prev = f.eyeFrom[i];
+            if (f.eyeP >= 1 || cur === prev) { drawEye(c, cur, cx, cy, w, h, f.open[i], side, f); return; }
+            const a = EASE.standard(f.eyeP), pop = EASE.pop(f.eyeP);
+            const layer = (type, alpha, sc) => {
+                c.save(); c.globalAlpha = clamp(alpha, 0, 1);
+                c.translate(cx, cy); c.scale(sc, sc); c.translate(-cx, -cy);
+                drawEye(c, type, cx, cy, w, h, f.open[i], side, f);
+                c.restore();
+            };
+            layer(prev, 1 - a, 1 - 0.35 * a);
+            layer(cur, a, 0.65 + 0.35 * pop);
         }
         function paintFace(t) {
             const c = fctx, f = face;
             c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, FACE_W, FACE_H); c.setTransform(FACE_K, 0, 0, FACE_K, 0, 0);
-            const sx = f.shiftX + f.jx, sy = f.shiftY;
-            const ex = 72, ey = 124 + f.ey * 256 + sy;
-            const w = 34 * f.ew, hL = 64 * f.sL, hR = 64 * f.sR;
+            const sx = f.shiftX, sy = f.shiftY;
+            const ex = 86, ey = 148 + f.ey * 256 + sy;
+            const w = 36 * f.ew, hL = 52 * f.sL, hR = 52 * f.sR;
             // blush
-            if (f.blush > 0.01) {                           // the blush swells up rather than fading in
-                const bk = EASE.standard(clamp(f.blush / 0.3, 0, 1));
-                c.fillStyle = css(CORAL, 0.18 + 0.45 * clamp(f.blush, 0, 0.55));
-                [-1, 1].forEach((s) => { c.beginPath(); c.ellipse(FACE_CX + s * 108 + sx * 0.5, 178 + sy * 0.5, 24 * bk, 14 * bk, 0, 0, TAU); c.fill(); });
+            if (f.blush > 0.02) {
+                c.fillStyle = css(PINK, 0.62 * f.blush);
+                [-1, 1].forEach((s) => { c.beginPath(); c.ellipse(FACE_CX + s * 124 + sx * 0.5, 182 + sy * 0.5, 28, 16, 0, 0, TAU); c.fill(); });
             }
             drawEyeMix(c, FACE_CX - ex + sx, ey, w, hL, 0, -1, f);
             drawEyeMix(c, FACE_CX + ex + sx, ey, w, hR, 1, 1, f);
-            // tears: two streams that run down from the eyes, each with a bead sliding along it
-            if (f.tears > 0.02) {
-                const tk = EASE.out(clamp(f.tears, 0, 1)), len = 58 * tk;
-                [-1, 1].forEach((s, i) => {
-                    const x = FACE_CX + s * (ex + 6) + sx, y0 = ey + 26;
-                    c.fillStyle = css(TEAR, 0.92);
-                    rrect(c, x - 5.5, y0, 11, Math.max(11, len), 5.5); c.fill();
-                    if (len > 16) {
-                        const by = y0 + 5 + ((T * 55 + i * 27) % Math.max(10, len - 10));
-                        c.fillStyle = 'rgba(255,255,255,.8)';
-                        c.beginPath(); c.ellipse(x - 1, by, 3, 4, 0, 0, TAU); c.fill();
-                    }
-                });
-            }
-            // a nervous drop of sweat: swells at the temple, runs down, shrinks away
-            if (f.sweat > 0.03) {
-                const ph = (T * 0.55) % 1, sk = EASE.out(clamp(f.sweat, 0, 1));
-                const grow = EASE.out(clamp(ph / 0.25, 0, 1)), shrink = ph > 0.78 ? 1 - EASE.standard((ph - 0.78) / 0.22) : 1;
-                const r = 11 * sk * grow * shrink, x = FACE_CX + 98 + sx * 0.5, y = 100 + sy * 0.5 + ph * 34;
-                if (r > 0.6) {
-                    c.fillStyle = css(TEAR); c.beginPath();
-                    c.moveTo(x, y - r * 2); c.bezierCurveTo(x + r * 0.2, y - r * 1.2, x + r, y - r * 0.9, x + r, y);
-                    c.arc(x, y, r, 0, Math.PI, false);
-                    c.bezierCurveTo(x - r, y - r * 0.9, x - r * 0.2, y - r * 1.2, x, y - r * 2); c.fill();
-                    c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.ellipse(x - r * 0.35, y + r * 0.1, r * 0.2, r * 0.32, 0, 0, TAU); c.fill();
-                }
-            }
             // mouth
-            const mx = FACE_CX + f.mx * 256 + sx * 0.4, mt = 184 + f.my * 256 + sy * 0.4;
+            const mx = FACE_CX + f.mx * 256 + sx * 0.4, mt = 190 + f.my * 256 + sy * 0.4;
             const hw = f.mw * 128, op = Math.max(2, f.mo * 256), cur = f.mc * 256, up = clamp(f.mu, 0, 1);
             const N = 28, top = [], bot = [];
             for (let i = 0; i <= N; i++) {
@@ -1008,21 +879,9 @@ void main(){
             path(); c.fill(); c.stroke();
             if (f.tongue > 0.03) {
                 c.save(); path(); c.clip();
-                const tg = EASE.out(clamp(f.tongue, 0, 1));
-                c.fillStyle = css(CORAL);
-                c.beginPath(); c.ellipse(mx + hw * 0.18, mt + op * (0.95 + (1 - tg) * 1.1), hw * 0.52 * (0.6 + 0.4 * tg), op * 0.5 * (0.6 + 0.4 * tg), 0, 0, TAU); c.fill();
+                c.fillStyle = css(CORAL, clamp(f.tongue, 0, 1));
+                c.beginPath(); c.ellipse(mx + hw * 0.18, mt + op * 0.95, hw * 0.52, op * 0.5, 0, 0, TAU); c.fill();
                 c.restore();
-            }
-            if (f.teeth > 0.03) {                           // jagged teeth drop down from the top lip
-                c.save(); path(); c.clip();
-                const topY = (x) => { const q = 1 - x * x; return mt + cur * q - up * op * Math.sqrt(Math.max(0, q)); };
-                const n = 6, dep = Math.min(op * 0.8, 20) * EASE.out(clamp(f.teeth, 0, 1));
-                c.fillStyle = css(TOOTH); c.beginPath();
-                for (let j = 0; j < n; j++) {
-                    const x0 = -1 + (2 * j) / n, x1 = -1 + (2 * (j + 1)) / n, xm = (x0 + x1) / 2;
-                    c.moveTo(mx + x0 * hw, topY(x0) - 2); c.lineTo(mx + x1 * hw, topY(x1) - 2); c.lineTo(mx + xm * hw, topY(xm) + dep);
-                }
-                c.fill(); c.restore();
             }
             gl.bindTexture(gl.TEXTURE_2D, faceTex);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, faceCv);
@@ -1037,25 +896,18 @@ void main(){
             const dur = slow ? 0.01 : 0.34;
             const emo = curEmo();
             const wobD = W('wobDizzy', emo === 'dizzy', dt), wobS = W('wobSleepy', emo === 'sleepy', dt);
-            const wobC = W('wobCry', emo === 'crying', dt), wobF = W('wobFury', emo === 'furious', dt);
-            face.jx = Math.sin(t * 52) * 1.7 * wobF;
             NUM_KEYS.forEach((key) => {
                 let v = glideTo(fg[key], e[key], dur, EASE.standard, dt);
                 if (key === 'mc') v += 0.07 * Math.sin(t * 7) * wobD;
-                if (key === 'mo') v += 0.03 * Math.sin(t * 2.2) * wobS + 0.022 * Math.sin(t * 11) * wobC;
+                if (key === 'mo') v += 0.03 * Math.sin(t * 2.2) * wobS;
                 face[key] = v;
             });
-            // eye shape changes morph: each eye flows from its old outline into the new one.
-            // If a change is interrupted, the half-morphed outline becomes the new starting point.
-            const edur = slow ? 0.01 : 0.38;
-            for (let i = 0; i < 2; i++) {
-                if (e.eye[i] !== face.eye[i]) {
-                    if (face.eyeP[i] < 1) { const m = eyeNow(i); face.eyeSnap[i] = m ? { pts: m.pts, stroke: false, col: m.col } : null; }
-                    else face.eyeSnap[i] = null;
-                    face.eyeFrom[i] = face.eye[i]; face.eye[i] = e.eye[i]; face.eyeP[i] = 0; face.eyeAlign[i] = null;
-                }
-                if (face.eyeP[i] < 1) face.eyeP[i] = Math.min(1, face.eyeP[i] + dt / edur);
+            // eye shape changes crossfade; if one is interrupted, start from whichever was showing more
+            if (e.eye[0] !== face.eye[0] || e.eye[1] !== face.eye[1]) {
+                face.eyeFrom = face.eyeP < 0.5 ? face.eyeFrom : face.eye;
+                face.eye = e.eye; face.eyeP = 0;
             }
+            if (face.eyeP < 1) face.eyeP = Math.min(1, face.eyeP + dt / (slow ? 0.01 : 0.28));
             // blink: quick eased close, slightly slower eased open
             let want = [1, 1];
             if (blinkT >= 0) {
@@ -1090,12 +942,10 @@ void main(){
                 if (T > glanceAt) { glanceAt = T + rand(2.5, 6); glance.x = rand(-0.8, 0.8); glance.y = rand(-0.5, 0.3); }
                 if (T > actionAt) {
                     actionAt = T + rand(9, 16);
-                    const a = pick(['wave', 'ears', 'ears', 'hop', 'wink', 'playful', 'smug']);
+                    const a = pick(['wave', 'ears', 'ears', 'hop', 'wink']);
                     if (a === 'wave') waveUntil = T + 2.4;
-                    else if (a === 'ears') { st.earL.v += 12; st.earR.v -= 12; }
+                    else if (a === 'ears') { st.earL.v += 6; st.earR.v -= 6; }
                     else if (a === 'hop') { st.vy = -u * 10; st.grounded = false; }
-                    else if (a === 'playful') emote('playful', 1500);
-                    else if (a === 'smug') emote('smug', 1600);
                     else emote('wink', 900);
                 }
             }
@@ -1159,7 +1009,9 @@ void main(){
                 st[k].x.v -= cdx * LAG[k].k * LAG_IMPULSE; st[k].y.v += cdy * LAG[k].k * LAG_IMPULSE;
             });
             st.armL.v -= Math.cos(st.armL.x) * cdx * 0.5; st.armR.v -= Math.cos(st.armR.x) * cdx * 0.5;
-            st.earL.v -= Math.cos(st.earL.x) * cdx * 0.8; st.earR.v -= Math.cos(st.earR.x) * cdx * 0.8;
+            // floppy ears lag behind sideways and vertical movement
+            const flap = (a) => -Math.cos(a) * cdx + Math.sin(a) * cdy;
+            st.earL.v += flap(st.earL.x) * 0.45; st.earR.v += flap(st.earR.x) * 0.45;
 
             /* ----- targets ----- */
             const fl = st.held || !st.grounded;
@@ -1176,7 +1028,7 @@ void main(){
             const arms = POSE[pose];
             // base pose glides along a bezier; the wiggles are layered on top and faded in/out
             let bL = arms[0], bR = arms[1];
-            if (waving) { bR = 2.65; bL = -0.35; }
+            if (waving) { bR = 2.1; bL = -0.35; }
             const wRest = W('rest', pose === 'rest' && !waving, dt), wWave = W('wave', waving, dt);
             const wDizzy = W('dizzy', pose === 'dizzy', dt), wHeld = W('held', st.held, dt);
             const wJoy = W('joy', emoName === 'joy' && !st.held, dt);
@@ -1199,7 +1051,7 @@ void main(){
             st.legL.t = -spread + sw - kick - jig;
             st.legR.t = spread + sw + kick + jig;
 
-            const earSway = reduce ? 0 : Math.sin(T * 1.8) * 0.02;
+            const earSway = reduce ? 0 : Math.sin(T * 1.8) * 0.035;
             st.earL.t = EAR_L(glideTo(gz.earL, e.ear[0], gd, EASE.standard, dt)) + earSway;
             st.earR.t = EAR_R(glideTo(gz.earR, e.ear[1], gd, EASE.standard, dt)) - earSway;
 
@@ -1218,7 +1070,7 @@ void main(){
             /* ----- DOM ----- */
             const cx = st.x, cy = st.y - MID_Y * u;
             cv.style.transform = `translate3d(${Math.round(cx - S / 2)}px,${Math.round(cy - S / 2)}px,0)`;
-            hit.style.transform = `translate3d(${Math.round(st.x - 1.05 * u)}px,${Math.round(st.y - TOP * u * st.sy.x * st.qy)}px,0)`;
+            hit.style.transform = `translate3d(${Math.round(st.x - HALF_W * u)}px,${Math.round(st.y - TOP * u * st.sy.x * st.qy)}px,0)`;
             hit.style.height = Math.round(TOP * u * st.sy.x * st.qy) + 'px';
             const air = clamp((flat - st.y) / (4 * u), 0, 1);
             shadowEl.style.transform = `translate3d(${Math.round(st.x - 1.15 * u)}px,${Math.round(flat - 0.3 * u)}px,0) scale(${(1 - air * 0.5).toFixed(3)})`;
@@ -1249,7 +1101,7 @@ void main(){
 
             const sy = st.sy.x * st.qy, sx = st.sx.x * st.qx;
             const breathe = reduce ? 0 : Math.sin(T * 1.7) * 0.012;
-            const bob = reduce ? 0 : (Math.sin(T * 2.1) * 0.03 * e.bob + ((curEmo() === 'joy' || curEmo() === 'laugh') ? Math.abs(Math.sin(T * 8)) * 0.07 : 0)) * st.gW;
+            const bob = reduce ? 0 : (Math.sin(T * 2.1) * 0.03 * e.bob + (curEmo() === 'joy' ? Math.abs(Math.sin(T * 8)) * 0.07 : 0)) * st.gW;
             const R0 = new X().rot(mZ(st.lean.x)).s(sx, sy, sx);
             const G = R0.t(0, BODY_Y, 0).rot(mY(st.bodyYaw.x)).t(0, -BODY_Y, 0);
             const hp = HEAD_POS, lh = st.lagHead, lb = st.lagBody;
@@ -1258,24 +1110,29 @@ void main(){
 
             // body
             const bodyX = G.t(lb.x.x, BODY_Y + bob * 0.6 + lb.y.x, 0).s(1, 1 + breathe, 1 + breathe);
-            drawPart(meshes.body, bodyX, false, 0.4);
-            reg('body', bodyX, [0, 0, 0.3], [0, 0, 0.3], 0.46);
+            drawPart(meshes.body, bodyX, false, 0.12);
+            reg('body', bodyX, [0, 0, 0.3], [0, 0, 0.3], 0.42);
 
             // head and ears
             const headX = G.t(hp[0] + lh.x.x, hp[1] + bob + lh.y.x, hp[2]).rot(mZ(st.headRoll.x)).rot(mY(st.headYaw.x)).rot(mX(st.headPitch.x));
             drawPart(meshes.head, headX, true);
-            reg('head', headX, [0, 0, 0.3], [0, 0, 0.3], 0.55);
+            reg('head', headX, [0, 0, 0.3], [0, 0, 0.3], 0.8);
             [['earL', LIMB.earL], ['earR', LIMB.earR]].forEach(([n, L]) => {
-                const M = headX.t(L.pivot[0], L.pivot[1], L.pivot[2]).rot(mZ(st[n].x)).t(0, -L.axis / 2, 0);
+                const M = headX.t(L.pivot[0], L.pivot[1], L.pivot[2]).rot(mZ(st[n].x)).t(0, -(EAR.len / 2 - EAR.root), 0);
                 drawPart(meshes.ear, M, false);
-                reg(n, M, [0, L.axis / 2, 0], [0, -L.axis / 2, 0], CAP_R * 1.3);
+                const h = EAR.len / 2 - EAR.w / 2;
+                reg(n, M, [0, h, 0], [0, -h, 0], EAR.w * 0.65);
             });
+
+            // cotton tail behind the body
+            const tw = reduce ? 0 : Math.sin(T * 2.6) * 0.012;
+            drawPart(meshes.tail, G.t(TAIL.pos[0] + lb.x.x + tw, TAIL.pos[1] + bob * 0.6 + lb.y.x, TAIL.pos[2]), false, 0.2);
 
             // arms and legs hang from a pivot at their inner end
             const limb = (n, L, mesh, lagk, extraY) => {
                 const lg = st[lagk];
                 const M = G.t(L.pivot[0] + lg.x.x, L.pivot[1] + (extraY || 0) + lg.y.x, L.pivot[2]).rot(mZ(st[n].x)).t(0, -L.axis / 2, 0);
-                drawPart(mesh, M, false, n.startsWith('arm') ? 0.18 : 0);
+                drawPart(mesh, M, false, n.startsWith('arm') ? 0.08 : 0);
                 reg(n, M, [0, L.axis / 2, 0], [0, -L.axis / 2, 0], CAP_R * 1.3);
             };
             limb('armL', LIMB.armL, meshes.arm, 'lagArmL', bob * 0.7);

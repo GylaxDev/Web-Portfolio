@@ -80,7 +80,6 @@
 .mascot-fx-heart { color: #ec6a40; }
 .mascot-fx-star { color: var(--amber); }
 .mascot-fx-drop { color: #9fd8ff; }
-.mascot-fx-anger { color: #ec6a40; }
 @keyframes mascot-rise {
     0% { opacity: 0; transform: translate(0, 8px) scale(.6); }
     18% { opacity: 1; transform: translate(0, 0) scale(1.1); }
