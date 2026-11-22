@@ -769,7 +769,42 @@ html[data-theme="dark"] .hero-mark{opacity:.24;mix-blend-mode:screen}
 @media(max-width:720px){.hero-mark{right:-35%;width:120vw}html[data-theme] .hero-mark{opacity:.12}}
 
 /* theme switch: circular reveal from the cursor (View Transitions); the colour cross-fade is skipped while it runs */
-::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
-::view-transition-old(root){z-index:1}
-::view-transition-new(root){z-index:2}
-html.theme-ripple *,html.theme-ripple *::before,html.theme-ripple *::after{transition:none!important}
+html.theme-ripple::view-transition-old(root),html.theme-ripple::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html.theme-ripple::view-transition-old(root){z-index:1}
+html.theme-ripple::view-transition-new(root){z-index:2}
+
+/* ---- mobile: nav collapses into a right-hand sidebar ---- */
+.menu-btn,.drawer,.drawer-scrim{display:none}
+@media(max-width:720px){
+  html.menu-ready .hin nav{display:none}
+  html.menu-ready .hin{flex-wrap:nowrap;align-items:center;gap:8px;padding:6px 16px;min-height:56px}
+  html.menu-ready .brand{flex:1 1 auto;min-width:0}
+  html.menu-ready .tgl{order:2;margin:0;width:40px;height:40px}
+  html.menu-ready .menu-btn{order:3;display:grid}
+  /* solid header: no live blur on phones (cheaper to scroll, and fixed children aren't trapped by it) */
+  html.menu-ready header.site{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(248,247,244,.97)}
+  html.menu-ready[data-theme="dark"] header.site{background:rgba(10,10,11,.96)}
+
+  .menu-btn{position:relative;flex:none;width:40px;height:40px;place-items:center;padding:0;border-radius:8px;border:0;background:transparent;color:var(--gray);cursor:pointer;margin-right:-8px}
+  .menu-btn:active{background:var(--stone);color:var(--ink)}
+  .menu-btn svg,.dr-close svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+
+  html.menu-ready .drawer-scrim{display:block;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .35s var(--apple),visibility 0s .35s}
+  html.menu-ready .drawer-scrim.open{opacity:1;visibility:visible;transition:opacity .35s var(--apple)}
+  html.menu-ready .drawer{display:flex;flex-direction:column;position:fixed;z-index:100;top:0;right:0;bottom:0;width:min(84vw,320px);
+    padding:max(14px,env(safe-area-inset-top)) 14px max(18px,env(safe-area-inset-bottom));background:var(--white);border-left:1px solid var(--line);
+    overflow-y:auto;overscroll-behavior:contain;transform:translateX(100%);visibility:hidden;transition:transform .45s var(--apple-out),visibility 0s .45s}
+  html.menu-ready .drawer.open{transform:none;visibility:visible;transition:transform .45s var(--apple-out)}
+  .dr-top{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px 8px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+  .dr-title{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--gray)}
+  .dr-close{display:grid;place-items:center;width:38px;height:38px;padding:0;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+  .drawer nav{display:flex;flex-direction:column;gap:2px}
+  .drawer nav a{display:flex;align-items:center;gap:14px;padding:13px 12px;border-radius:12px;color:var(--ink);text-decoration:none;font-size:17px;font-weight:500;letter-spacing:-.01em}
+  .drawer nav a:active,.drawer nav a[aria-current]{background:var(--stone)}
+  .drawer nav .i{flex:none;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--gray)}
+  .drawer nav hr{border:0;border-top:1px solid var(--line);margin:8px 6px}
+  html.menu-open,html.menu-open body{overflow:hidden}
+}
+
+/* theme switch: circular reveal from the cursor / tap point */
+html.theme-vt *,html.theme-vt *::before,html.theme-vt *::after{transition:none!important}

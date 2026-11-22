@@ -10,6 +10,8 @@ const root = document.documentElement;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 const fine = matchMedia('(hover: hover) and (pointer: fine)');
 const wide = matchMedia('(min-width: 735px)');
+const lite = matchMedia('(pointer: coarse), (max-width: 734px)');   // phones/tablets: the wave runs at 30 fps with a cheaper text mask
+
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = t => t * t * (3 - 2 * t);
@@ -24,6 +26,7 @@ const PAL_LIGHT = [[168, 124, 40], [196, 108, 44], [47, 93, 78], [60, 140, 120]]
 const NP = PAL_DARK.length;
 const SAT = 0.5;                                  // 1 = full brand colour, 0 = grey
 const soften = (c, g) => c.map(v => Math.round(g + (v - g) * SAT));
+let paused = 0;                                    // >0 while the sidebar or a phone theme fade wants the field still
 let dark = true, base = '', LC = [];
 function theme() {
   dark = root.getAttribute('data-theme') !== 'light';
@@ -35,7 +38,7 @@ function theme() {
     LC.push(`rgba(${pal[p].join(',')},${(lo + span * l / (NL - 1)).toFixed(3)})`);
 }
 theme();
-new MutationObserver(() => { theme(); if (reduce.matches) frame(0, 0); })
+new MutationObserver(() => { theme(); if (reduce.matches || paused) frame(0, 0); })
   .observe(root, { attributes: true, attributeFilter: ['data-theme'] });
 
 /* ---------- canvas ---------- */
@@ -120,11 +123,14 @@ const markEl = document.querySelector('.end .vmark');
 
 /* text map: coarse grid of where copy sits, so ripples recede behind it instead of cutting through it */
 const TC = 24, TEXT_SEL = 'h1,h2,h3,h4,p,li,figcaption,dt,dd,summary,label,blockquote,.cta,.cta2,.hgo,.chip,.tags li,header.site nav a';
+let tmEls = null, tmElsT = 0, lastScrollT = 0;
 let tm = null, tmW = 0, tmH = 0, tmDirty = true, tmLast = -1e9;
 function buildTextMask() {
   tmW = Math.ceil(W / TC); tmH = Math.ceil(H / TC);
   if (!tm || tm.length !== tmW * tmH) tm = new Uint8Array(tmW * tmH); else tm.fill(0);
-  for (const el of document.querySelectorAll(TEXT_SEL)) {
+  const now = performance.now();
+  if (!tmEls || now - tmElsT > 4000) { tmEls = document.querySelectorAll(TEXT_SEL); tmElsT = now; }
+  for (const el of tmEls) {
     const r = el.getBoundingClientRect();
     if (r.bottom < 0 || r.top > H || r.width < 4 || r.height < 4) continue;
     const x0 = Math.max(0, Math.floor((r.left - 8) / TC)), x1 = Math.min(tmW - 1, Math.floor((r.right + 8) / TC));
@@ -214,7 +220,7 @@ function drawField(t, dt) {
       const age = t - g.t0, u = 1 - age / RLIFE;
       rX.push(g.x); rY.push(g.y); rR.push(40 + age * RSPEED); rA.push(g.a * u * u); rS.push(1 / (2 * Math.pow(46 + age * 0.012, 2)));
     }
-    if (tmDirty ? t - tmLast > 90 : t - tmLast > 900) buildTextMask();
+    if (lite.matches ? (tmDirty ? t - lastScrollT > 160 : t - tmLast > 2500) : (tmDirty ? t - tmLast > 90 : t - tmLast > 900)) buildTextMask();
   }
   const nrr = rX.length;
   const RH = RC * 0.7 * (1 + 0.03 * breath);
@@ -333,15 +339,19 @@ function aimMagnets() {
 let raf = 0, last = 0;
 function loop(ts) {
   raf = requestAnimationFrame(loop);
+  if (lite.matches && ts - last < 28) return;
   const dt = clamp((ts - last) / 16.667, 0.2, 2.5); last = ts;
   frame(ts, dt);
 }
-const start = () => { if (!raf && !reduce.matches && !document.hidden) { last = performance.now(); raf = requestAnimationFrame(loop); } };
+const start = () => { if (!raf && !paused && !reduce.matches && !document.hidden) { last = performance.now(); raf = requestAnimationFrame(loop); } };
 const stop = () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } };
+window.addEventListener('fx:pause', () => { paused++; stop(); });
+window.addEventListener('fx:resume', () => { paused = Math.max(0, paused - 1); if (!paused) start(); });
 
 /* ---------- events ---------- */
 let scrollTick = 0;
 function onScroll() {
+  lastScrollT = performance.now();
   if (scrollTick) return;
   tmDirty = true;
   scrollTick = requestAnimationFrame(() => {

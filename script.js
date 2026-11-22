@@ -291,14 +291,40 @@ if (gh) {
   }
 }
 
+/* ---------- Mobile sidebar menu ---------- */
+(function initMenu() {
+  const root = document.documentElement, btn = document.getElementById('menuBtn'), dr = document.getElementById('drawer'),
+        scrim = document.getElementById('drawerScrim'), closeBtn = document.getElementById('drawerClose');
+  if (!btn || !dr || !scrim) return;
+  const mq = matchMedia('(max-width: 720px)');
+  root.classList.add('menu-ready');
+  let isOpen = false;
+  const set = open => {
+    if (open === isOpen) return;
+    isOpen = open;
+    dr.classList.toggle('open', open); scrim.classList.toggle('open', open); root.classList.toggle('menu-open', open);
+    btn.setAttribute('aria-expanded', String(open)); btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    window.dispatchEvent(new Event(open ? 'fx:pause' : 'fx:resume'));       // the dot field rests while the sidebar is up
+    if (open) (dr.querySelector('nav a') || closeBtn).focus({ preventScroll: true });
+    else if (dr.contains(document.activeElement)) btn.focus({ preventScroll: true });
+  };
+  btn.addEventListener('click', () => set(!isOpen));
+  closeBtn.addEventListener('click', () => set(false));
+  scrim.addEventListener('click', () => set(false));
+  dr.addEventListener('click', e => { if (e.target.closest('nav a')) set(false); });   // unlock scroll first, then the anchor jump runs
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) set(false); });
+  (mq.addEventListener ? mq.addEventListener('change', e => { if (!e.matches) set(false); }) : mq.addListener(e => { if (!e.matches) set(false); }));
+})();
+
 /* ---------- Header: highlight the section in view ---------- */
 (function navSpy() {
-  const map = new Map($('.hin nav a[href^="#"]').map(a => [a.getAttribute('href').slice(1), a]));
+  const map = new Map();
+  $('.hin nav a[href^="#"]').forEach(a => map.set(a.getAttribute('href').slice(1), [a, document.querySelector('.drawer nav a[href="' + a.getAttribute('href') + '"]')]));
   const io = new IntersectionObserver(es => es.forEach(e => {
-    const a = map.get(e.target.id); if (!a || !e.isIntersecting) return;
-    map.forEach(x => x.removeAttribute('aria-current')); a.setAttribute('aria-current', 'true');
+    const pair = map.get(e.target.id); if (!pair || !e.isIntersecting) return;
+    map.forEach(p => p.forEach(x => x && x.removeAttribute('aria-current'))); pair.forEach(x => x && x.setAttribute('aria-current', 'true'));
   }), { rootMargin: '-40% 0px -55% 0px' });
-  map.forEach((a, id) => { const sec = document.getElementById(id); if (sec) io.observe(sec); });
+  map.forEach((p, id) => { const sec = document.getElementById(id); if (sec) io.observe(sec); });
 })();
 })();
 
@@ -337,7 +363,7 @@ if (gh) {
       apply(next);
       return;
     }
-    root.classList.add('theme-ripple');
+    root.classList.add('theme-vt', 'theme-ripple');
     const vt = document.startViewTransition(() => apply(next));
     vt.ready.then(() => {
       root.animate(
@@ -345,6 +371,6 @@ if (gh) {
         { duration: 900, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' }
       );
     }).catch(() => {});
-    vt.finished.finally(() => root.classList.remove('theme-ripple'));
+    vt.finished.finally(() => root.classList.remove('theme-vt', 'theme-ripple'));
   });
 })();
