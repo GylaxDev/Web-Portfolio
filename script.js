@@ -145,6 +145,14 @@ if (vp) {
     if (reduced() || saver) drop();
     else {
       vid.addEventListener('playing', () => { vp.classList.add('live'); play.hidden = false; });
+      /* the 1.4 MB clip is fetched only after the page has finished loading (the poster image shows until then) */
+      const attach = () => {
+        if (vid.dataset.attached) return; vid.dataset.attached = '1';
+        ['mp4', 'webm'].forEach(k => { const src = document.createElement('source'); src.src = vid.dataset[k]; src.type = 'video/' + k; vid.appendChild(src); });
+        vid.load(); sync();
+      };
+      const later = () => ('requestIdleCallback' in window ? requestIdleCallback(attach, { timeout: 2500 }) : setTimeout(attach, 1200));
+      if (document.readyState === 'complete') later(); else window.addEventListener('load', later, { once: true });
       new IntersectionObserver(es => { inView = es[0].isIntersecting; sync(); }, { threshold: .1 }).observe(vp);
       document.addEventListener('visibilitychange', sync);
       mqReduce.addEventListener('change', sync);

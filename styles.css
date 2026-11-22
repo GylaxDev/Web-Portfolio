@@ -1,3 +1,6 @@
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(assets/fonts/inter-latin-wght-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter Tight';font-style:normal;font-weight:600;font-display:swap;src:url(assets/fonts/inter-tight-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/jetbrains-mono-latin-400-normal.woff2) format('woff2')}
 :root{--paper:#F8F7F4;--white:#fff;--stone:#F1EFEA;--ink:#141413;--gray:#6B6A66;--line:#E6E4DD;--serif:'Inter Tight','Inter',system-ui,sans-serif;--sans:'Inter',system-ui,sans-serif;--shadow:0 4px 20px rgba(20,20,19,.06)}
 *{box-sizing:border-box;margin:0}html{scroll-behavior:smooth;scroll-padding-top:72px}
 body{background:var(--paper);color:var(--ink);font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
