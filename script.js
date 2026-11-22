@@ -316,14 +316,35 @@ if (gh) {
     if (meta) meta.setAttribute('content', th === 'dark' ? '#0A0A0B' : '#F8F7F4');
   };
   sync(root.getAttribute('data-theme') || 'dark');
-  btn.addEventListener('click', () => {
-    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    if (!mq.matches) {
-      root.classList.add('theme-anim'); clearTimeout(t);
-      t = setTimeout(() => root.classList.remove('theme-anim'), 700);
-    }
+  const apply = next => {
     root.setAttribute('data-theme', next);
     try { localStorage.setItem('theme', next); } catch (e) { /* storage unavailable */ }
     sync(next);
+  };
+  btn.addEventListener('click', e => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    if (mq.matches) { apply(next); return; }
+
+    /* the new theme spreads out from the cursor as a circle (keyboard clicks: from the button) */
+    const r = btn.getBoundingClientRect();
+    const x = e.detail === 0 ? r.left + r.width / 2 : e.clientX;
+    const y = e.detail === 0 ? r.top + r.height / 2 : e.clientY;
+    const rad = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+
+    if (!document.startViewTransition) {                 // older browsers: plain cross-fade
+      root.classList.add('theme-anim'); clearTimeout(t);
+      t = setTimeout(() => root.classList.remove('theme-anim'), 700);
+      apply(next);
+      return;
+    }
+    root.classList.add('theme-ripple');
+    const vt = document.startViewTransition(() => apply(next));
+    vt.ready.then(() => {
+      root.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${rad}px at ${x}px ${y}px)`] },
+        { duration: 900, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' }
+      );
+    }).catch(() => {});
+    vt.finished.finally(() => root.classList.remove('theme-ripple'));
   });
 })();

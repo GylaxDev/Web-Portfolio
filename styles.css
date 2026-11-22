@@ -174,7 +174,6 @@ h2{line-height:1.08}.entry h3,.ehead h3,.lab h3,.fcard h3{line-height:1.1}
 .entry .frame img,.entry .shots .frame img{display:block;width:100%;max-width:100%;max-height:none;height:auto;margin:0;border:0;border-radius:0;background:none;object-fit:initial}
 @media(max-width:720px){.hin{flex-wrap:wrap;gap:6px;padding:10px 16px 6px}.hin nav{width:100%;margin:0 -6px}.hin nav .nl{display:inline}.hin nav a{padding:6px 10px}html{scroll-padding-top:96px}}
 
-
 /* ---- v16: live hero, GitHub feed, lightbox, benchmark, motion ---- */
 :root{--mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;--ease:cubic-bezier(.16,1,.3,1)}
 
@@ -297,7 +296,6 @@ html.lb-open{overflow:hidden}
 .vmark .iso{position:absolute;inset:0;background:url(assets/vincent-contours.svg) center/100% 100% no-repeat}
 @keyframes vdrift{to{transform:translate3d(6%,-4%,0) rotate(8deg) scale(1.1)}}
 .hero{overflow:clip}.hero>.hcopy,.hero>.hview{position:relative;z-index:1}
-.hero-mark{position:absolute;z-index:0;right:-8%;top:50%;width:min(940px,95vw);transform:translateY(-50%);opacity:.17;pointer-events:none}
 .end{max-width:1160px;margin:0 auto;padding:8px 20px 64px;display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap}
 .end .vmark{width:min(560px,100%)}.end .micro{color:var(--gray);font-size:13px;margin-bottom:8px}
 @media(prefers-reduced-motion:reduce){.vmark .wash{animation:none}}
@@ -330,7 +328,6 @@ html.lb-open{overflow:hidden}
 .work .entry .links a:hover,.work .entry .links a:focus-visible{background:var(--ink);color:#fff}
 @media(max-width:600px){.work .entry{padding:22px}.work .ehead{padding-bottom:18px;margin-bottom:18px}}
 
-
 /* ---- v22: DARK THEME (applies when <html data-theme="dark">) ---- */
 :root{color-scheme:light}
 html[data-theme="dark"]{--paper:#0A0A0B;--white:#151518;--stone:#1D1D21;--ink:#F2F1ED;--gray:#9C9A94;--line:#242428;
@@ -350,7 +347,6 @@ html[data-theme="dark"] .cta2:hover{background:#25252A;border-color:var(--hair-2
 html[data-theme="dark"] .stack{border-top-color:var(--hair)}
 html[data-theme="dark"] .stack li,html[data-theme="dark"] .tags li,html[data-theme="dark"] .hico,html[data-theme="dark"] .etile,html[data-theme="dark"] .ph,html[data-theme="dark"] .hgo{background:var(--card-2);color:#D8D6D0}
 html[data-theme="dark"] .hgo:hover{background:#25252A}
-html[data-theme="dark"] .hero-mark{opacity:.2;mix-blend-mode:screen}
 html[data-theme="dark"] .pframe{background:#0E0E10;border:1px solid var(--hair-2);box-shadow:none}
 html[data-theme="dark"] .plate figcaption,html[data-theme="dark"] .plate figcaption a{color:#8E8C86}
 html[data-theme="dark"] .plate figcaption a:hover{color:var(--ink)}
@@ -404,7 +400,6 @@ html[data-theme="dark"] .end .micro{color:#8E8C86}
 html[data-theme="dark"] .lb{background:rgba(5,5,6,.86)}
 html[data-theme="dark"] a{text-decoration-color:rgba(255,255,255,.3)}
 html[data-theme="dark"] .bgrid a:hover{color:#fff}
-
 
 /* ---- v22: theme toggle ---- */
 .hin nav{margin-left:auto}
@@ -466,7 +461,6 @@ html.theme-anim *,html.theme-anim *::before,html.theme-anim *::after{
 .etile.round img{border-radius:50%}
 .appico.round{border-radius:50%}
 
-
 /* ---- v26: GitHub contribution blocks ---- */
 .gc{padding:2px 24px 20px}
 .gc-scroll{container-type:inline-size;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:#2C2C31 transparent}
@@ -493,7 +487,6 @@ html.theme-anim *,html.theme-anim *::before,html.theme-anim *::after{
 @media(max-width:640px){.gc{padding:2px 18px 18px}}
 
 .gc-legend i{width:11px;height:11px}
-
 
 /* ---- v27: icon-only theme toggle + mobile-first layout cleanup ---- */
 
@@ -536,8 +529,6 @@ main>section.bg{padding-top:clamp(56px,7vw,88px);padding-bottom:clamp(40px,5vw,6
   .hero h1{font-size:clamp(1.75rem,7.4vw,2.1rem);line-height:1.12}
   .hero .sub{font-size:15.5px;margin:16px 0 24px}
   .eyebrow{margin-bottom:14px}
-  .hero-mark{opacity:.08;right:-30%;width:130vw}
-  html[data-theme="dark"] .hero-mark{opacity:.1}
 
   /* the two buttons: same width, same height, one tidy column */
   .actions{display:grid;grid-template-columns:1fr;gap:10px}
@@ -587,3 +578,198 @@ main>section.bg{padding-top:clamp(56px,7vw,88px);padding-bottom:clamp(40px,5vw,6
   .hin nav .i{display:none}
   .stack li{font-size:12.5px;padding:9px 4px}
 }
+
+/* ---- v28: fix horizontal overflow (Selected work) + smoother, safer layout ---- */
+html,body{max-width:100%;overflow-x:clip}
+main,main>section,.grid,.col,.entry,.chips,.whead,.fgrid,.tier,.bgrid,.two,.shots{min-width:0;max-width:100%}
+/* 1fr alone lets nowrap children (the chip row) stretch the column; minmax(0,1fr) does not */
+.grid{grid-template-columns:minmax(0,10fr)}
+@media(min-width:761px){.grid{grid-template-columns:minmax(150px,2fr) minmax(0,10fr)}}
+.two,.shots,.tier.top,.tier.bottom,.bgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.tier.top{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+.bgrid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.25fr)}
+.shots.phones{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:860px){.bgrid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:800px){.tier.top,.tier.bottom{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){.shots:not(.phones){grid-template-columns:minmax(0,1fr)}}
+@media(max-width:900px){main>section.hero{grid-template-columns:minmax(0,1fr)}.fgrid,.fgrid .fcard{grid-template-columns:minmax(0,1fr)}}
+.entry,.lab,.gh{overflow-wrap:anywhere}
+.entry pre,.asm{max-width:100%}
+img,video,svg{max-width:100%}
+
+/* chip row: scrolls inside itself, never widens the page */
+@media(max-width:720px){
+  .chips{margin:0 -16px 20px;padding:2px 16px 6px;max-width:none;width:calc(100% + 32px)}
+  main>section.hero,main>section.featured,main>section.work,main>section.systems,main>section.bg{padding-left:16px;padding-right:16px}
+  .hin{padding-left:16px;padding-right:16px}
+  .whead{align-items:baseline}
+  .work .entry{padding:16px}
+}
+
+/* smoothness: skip rendering off-screen sections, cheaper scrolling */
+main>section.work,main>section.systems,main>section.bg{content-visibility:auto;contain-intrinsic-size:auto 900px}
+.entry{content-visibility:auto;contain-intrinsic-size:auto 700px}
+.entry[hidden]{content-visibility:visible}
+
+/* ---- v29: patterns borrowed from johnyvino.com (slim header, swipe cards, flat sections, calmer type) ---- */
+
+/* typography polish: balanced headings, no orphans in paragraphs */
+h1,h2,h3,.lead{text-wrap:balance}
+p,li,.lead{text-wrap:pretty}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
+/* desktop: more air between a section label, its title and its content */
+@media(min-width:901px){
+  .idx{margin-bottom:40px}
+  .whead,.row{margin-bottom:40px}
+  main>section.featured .row{margin-bottom:32px}
+  .systems .intro{max-width:56ch}
+}
+
+@media(max-width:720px){
+  /* one consistent 20px gutter, like their 24px mobile gutter */
+  main>section.hero,main>section.featured,main>section.work,main>section.systems,main>section.bg{padding-left:20px;padding-right:20px}
+  .hin{padding-left:20px;padding-right:20px}
+  .chips{margin:0 -20px 20px;padding:2px 20px 6px;width:calc(100% + 40px)}
+
+  /* slim single-row header: brand, 3 icon links, toggle */
+  .hin{flex-wrap:nowrap;gap:6px;padding-top:6px;padding-bottom:6px;min-height:52px}
+  .brand{flex:1 1 auto;min-width:0;font-size:16px;gap:8px}
+  .brand span{overflow:hidden;text-overflow:ellipsis}
+  .hin nav{order:1;flex:none;width:auto;margin:0;display:flex;gap:0;justify-content:flex-end}
+  .hin nav .nl{display:none}
+  .hin nav .i{display:inline-block;width:19px;height:19px}
+  .hin nav a{width:38px;height:38px;padding:0;justify-content:center;border-radius:10px}
+  .tgl{order:2;margin:0 -9px 0 0;width:38px;height:38px}
+  html{scroll-padding-top:68px}
+
+  /* Featured: swipeable cards (snap) instead of a long stack */
+  .fgrid{display:flex;gap:14px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 -20px;padding:0 20px 4px;width:calc(100% + 40px)}
+  .fgrid::-webkit-scrollbar{display:none}
+  .fgrid .fcard,.fgrid .fcard:nth-child(n+4){flex:0 0 80%;max-width:340px;scroll-snap-align:start;scroll-margin-left:20px}
+  .fcard .hov{display:none}
+
+  /* Selected work: flat sections instead of boxed cards inside a boxed section */
+  html[data-theme] .work .entry{background:none;border:0;border-radius:0;box-shadow:none;padding:0 0 40px;margin-bottom:40px;border-bottom:1px solid var(--line)}
+  html[data-theme] .work .entry:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+  .work .ehead{border-bottom:0;padding-bottom:0;margin-bottom:14px}
+  .work .entry .two{border-top:0;padding-top:0;margin-top:22px}
+  .entry .frame{border-radius:12px}
+
+  /* phone screenshots: swipe row so they stay large enough to read */
+  .shots.phones{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:16px -20px 0;padding:0 20px;width:calc(100% + 40px)}
+  .shots.phones::-webkit-scrollbar{display:none}
+  .shots.phones .frame{flex:0 0 62%;scroll-snap-align:start;scroll-margin-left:20px}
+
+  /* Systems & Labs / Background breathe like the reference (80px sections) */
+  main>section.systems,main>section.bg{padding-top:64px;padding-bottom:64px}
+}
+@media(max-width:350px){.brand span{display:none}}
+
+/* ---- v31: FLATTEN — one canvas, hairline rules, only media gets a frame ---- */
+html[data-theme]{--rule:var(--hair,var(--line))}
+
+/* 1. sections: same background everywhere, separated by a single line */
+html[data-theme] main>section.featured,
+html[data-theme] main>section.work,
+html[data-theme] main>section.systems,
+html[data-theme] main>section.bg{background:transparent!important;box-shadow:none!important}
+html[data-theme] main>section.work,
+html[data-theme] main>section.systems,
+html[data-theme] main>section.bg{border:0!important;border-top:1px solid var(--rule)!important}
+html[data-theme] main>section.featured{border:0!important}
+.idx,html[data-theme] .idx,html[data-theme] .work .idx,html[data-theme] .systems .idx{border:0!important;padding-top:0;margin-bottom:20px;color:var(--gray)}
+
+/* 2. hero: the pill clusters are gone */
+html[data-theme] .cta2{background:transparent!important;border:1px solid var(--rule)!important;color:var(--ink)}
+html[data-theme] .cta2:hover{border-color:var(--gray)!important}
+.stack{display:flex!important;flex-wrap:wrap;gap:6px 0!important;padding-top:20px}
+html[data-theme] .stack{border-top:1px solid var(--rule)}
+html[data-theme] .stack li{background:none!important;border:0!important;border-radius:0;padding:0!important;font:400 13px/1.5 var(--mono);color:var(--gray)!important}
+.stack li .i{display:none}
+.stack li+li::before{content:"·";margin:0 .75em;opacity:.55}
+
+/* 3. tags become quiet mono text instead of filled pills */
+html[data-theme] .tags li,html[data-theme] .entry .tags li,html[data-theme] .lab .tags li{background:none!important;border:0!important;border-radius:0;padding:0!important;font:400 12.5px/1.5 var(--mono);color:var(--gray)!important;letter-spacing:0}
+.tags{gap:4px 0!important}
+.tags li+li::before{content:"·";margin:0 .65em;opacity:.55}
+
+/* 4. filter chips become plain text tabs */
+html[data-theme] .chip,html[data-theme] .systems .chip{background:none!important;border:0!important;border-radius:0;box-shadow:inset 0 -1px 0 transparent!important;padding:6px 0;color:var(--gray)}
+html[data-theme] .chip:hover{background:none!important;color:var(--ink);transform:none}
+html[data-theme] .chip.on,html[data-theme] .systems .chip.on{background:none!important;color:var(--ink);box-shadow:inset 0 -1px 0 var(--ink)!important}
+.chip .i,.chip svg{display:none}
+.chips{gap:22px}
+
+/* 5. case studies: no boxes, just content on the canvas */
+html[data-theme] .entry,html[data-theme] .work .entry{background:none!important;border:0!important;border-top:1px solid var(--rule)!important;border-radius:0;box-shadow:none!important;padding:48px 0 56px;margin:0}
+html[data-theme] .work .ehead{border:0;padding-bottom:0;margin-bottom:16px}
+html[data-theme] .work .entry .two{border:0;padding-top:0;margin-top:32px}
+html[data-theme] .etile{background:none!important;border:0!important;width:auto;height:auto;border-radius:0}
+.etile img{border-radius:14px}.etile.round img{border-radius:50%}
+.entry .tags{margin-bottom:18px}
+
+/* 6. Systems & Labs: same canvas, cards become ruled columns */
+html[data-theme] .lab,html[data-theme] .gh{background:none!important;border:0!important;border-top:1px solid var(--rule)!important;border-radius:0;box-shadow:none!important;padding:24px 0 0}
+html[data-theme] .gh{padding:0}
+.gh-head{padding:20px 0 12px}.gc{padding:2px 0 16px}
+html[data-theme] .gh-row{padding:14px 0;color:var(--gray);background:none}
+html[data-theme] .gh-row:hover,html[data-theme] .gh-row:focus-visible{background:none;color:var(--ink)}
+.tier{gap:40px;margin-bottom:40px}
+.gh{margin-bottom:40px!important}
+/* text colours follow the theme now that the dark band is gone */
+html[data-theme] main>section.systems,html[data-theme] .systems .intro,html[data-theme] .lab p,html[data-theme] .lab .micro,html[data-theme] .gh-meta,html[data-theme] .gc-link{color:var(--gray)}
+html[data-theme] .systems h2,html[data-theme] .lab h3,html[data-theme] .gh-head h3,html[data-theme] .gh-repo,html[data-theme] .lab .links a,html[data-theme] .lab .links span,html[data-theme] .gc-link:hover{color:var(--ink)}
+html[data-theme] .gc-grid i:not(.l1):not(.l2):not(.l3):not(.l4),html[data-theme] .gc-legend .l0{background:var(--stone);box-shadow:none}
+
+@media(max-width:720px){
+  html[data-theme] .entry,html[data-theme] .work .entry{padding:36px 0 40px}
+  html[data-theme] .lab{padding-top:20px}
+  .tier{gap:28px;margin-bottom:28px}
+  .chips{gap:20px}
+}
+
+/* ---- v32: antigravity-style atmosphere — watermark, abstract art, particle field, cursor, motion gimmicks ---- */
+
+/* watermark is back (behind the hero copy), drifts slightly against the cursor */
+
+/* dot-matrix canvas sits behind everything */
+#fx{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;pointer-events:none;animation:fxin 1.6s var(--apple) .2s both}
+@keyframes fxin{from{opacity:0}to{opacity:1}}
+
+main>section{position:relative;isolation:isolate;overflow:clip}
+
+/* ---------- scroll progress along the header edge ---------- */
+header.site::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;transform-origin:0 50%;transform:scaleX(var(--sp,0));background:var(--ink);pointer-events:none}
+
+/* ---------- 3D tilt on featured cards ---------- */
+@media(hover:hover) and (min-width:735px){
+  .fcard{perspective:900px}
+  .fcard .art,.fcard:hover .art{transform:translateY(var(--ty,0px)) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))}
+  .fcard:hover{--ty:-4px}
+}
+
+/* keep content above the dot-matrix layer */
+main{position:relative}
+.end{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){#fx{animation:none}}
+
+
+/* ---- v34: neutral dot matrix only; the pointer itself is a circle ---- */
+.fx-ring{position:fixed;left:0;top:0;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#fff;mix-blend-mode:difference;pointer-events:none;z-index:300;opacity:0;will-change:transform;
+  transition:opacity .3s var(--apple),width .35s var(--apple-out),height .35s var(--apple-out),margin .35s var(--apple-out)}
+.fx-ring.on{opacity:1}
+.fx-ring.hot{width:30px;height:30px;margin:-15px 0 0 -15px}
+html.fx-cursor,html.fx-cursor *{cursor:none!important}
+
+/* hero monogram watermark: static (no parallax) */
+.hero-mark{display:block;position:absolute;z-index:0;right:-8%;top:50%;width:min(940px,95vw);transform:translateY(-50%);opacity:.2;pointer-events:none}
+html[data-theme="dark"] .hero-mark{opacity:.24;mix-blend-mode:screen}
+@media(max-width:720px){.hero-mark{right:-35%;width:120vw}html[data-theme] .hero-mark{opacity:.12}}
+
+/* theme switch: circular reveal from the cursor (View Transitions); the colour cross-fade is skipped while it runs */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){z-index:1}
+::view-transition-new(root){z-index:2}
+html.theme-ripple *,html.theme-ripple *::before,html.theme-ripple *::after{transition:none!important}
